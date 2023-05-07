@@ -6,16 +6,7 @@ import model.Constant;
 import model.PlayerColor;
 import model.Chessboard;
 import model.ChessboardPoint;
-import view.CellComponent;
-import view.ElephantChessComponent;
-import view.LionChessComponent;
-import view.TigerChessComponent;
-import view.LeopardChessComponent;
-import view.WolfChessComponent;
-import view.DogChessComponent;
-import view.CatChessComponent;
-import view.RatChessComponent;
-import view.ChessboardComponent;
+import view.*;
 
 /**
  * Controller is the connection between model and view,
@@ -79,7 +70,7 @@ public class GameController implements GameListener {
 
     // click a cell with a chess
     @Override
-    public void onPlayerClickChessPiece(ChessboardPoint point, ElephantChessComponent component) {
+    public void onPlayerClickChessPiece(ChessboardPoint point, AnimalChessComponent component) {
         if (selectedPoint == null) {
             if (model.getChessPieceOwner(point).equals(currentPlayer)) {
                 selectedPoint = point;
@@ -92,98 +83,6 @@ public class GameController implements GameListener {
             component.repaint();
         }
         // TODO: Implement capture function
-    }
-
-    public void onPlayerClickChessPiece(ChessboardPoint point, LionChessComponent component) {
-        if (selectedPoint == null) {
-            if (model.getChessPieceOwner(point).equals(currentPlayer)) {
-                selectedPoint = point;
-                component.setSelected(true);
-                component.repaint();
-            }
-        } else if (selectedPoint.equals(point)) {
-            selectedPoint = null;
-            component.setSelected(false);
-            component.repaint();
-        }
-    }
-        public void onPlayerClickChessPiece (ChessboardPoint point, TigerChessComponent component){
-            if (selectedPoint == null) {
-                if (model.getChessPieceOwner(point).equals(currentPlayer)) {
-                    selectedPoint = point;
-                    component.setSelected(true);
-                    component.repaint();
-                }
-            } else if (selectedPoint.equals(point)) {
-                selectedPoint = null;
-                component.setSelected(false);
-                component.repaint();
-            }
-        }
-    public void onPlayerClickChessPiece (ChessboardPoint point, LeopardChessComponent component){
-        if (selectedPoint == null) {
-            if (model.getChessPieceOwner(point).equals(currentPlayer)) {
-                selectedPoint = point;
-                component.setSelected(true);
-                component.repaint();
-            }
-        } else if (selectedPoint.equals(point)) {
-            selectedPoint = null;
-            component.setSelected(false);
-            component.repaint();
-        }
-    }
-    public void onPlayerClickChessPiece (ChessboardPoint point, WolfChessComponent component){
-        if (selectedPoint == null) {
-            if (model.getChessPieceOwner(point).equals(currentPlayer)) {
-                selectedPoint = point;
-                component.setSelected(true);
-                component.repaint();
-            }
-        } else if (selectedPoint.equals(point)) {
-            selectedPoint = null;
-            component.setSelected(false);
-            component.repaint();
-        }
-    }
-    public void onPlayerClickChessPiece (ChessboardPoint point, DogChessComponent component){
-        if (selectedPoint == null) {
-            if (model.getChessPieceOwner(point).equals(currentPlayer)) {
-                selectedPoint = point;
-                component.setSelected(true);
-                component.repaint();
-            }
-        } else if (selectedPoint.equals(point)) {
-            selectedPoint = null;
-            component.setSelected(false);
-            component.repaint();
-        }
-    }
-    public void onPlayerClickChessPiece (ChessboardPoint point, CatChessComponent component){
-        if (selectedPoint == null) {
-            if (model.getChessPieceOwner(point).equals(currentPlayer)) {
-                selectedPoint = point;
-                component.setSelected(true);
-                component.repaint();
-            }
-        } else if (selectedPoint.equals(point)) {
-            selectedPoint = null;
-            component.setSelected(false);
-            component.repaint();
-        }
-    }
-    public void onPlayerClickChessPiece (ChessboardPoint point, RatChessComponent component){
-        if (selectedPoint == null) {
-            if (model.getChessPieceOwner(point).equals(currentPlayer)) {
-                selectedPoint = point;
-                component.setSelected(true);
-                component.repaint();
-            }
-        } else if (selectedPoint.equals(point)) {
-            selectedPoint = null;
-            component.setSelected(false);
-            component.repaint();
-        }
     }
 }
 

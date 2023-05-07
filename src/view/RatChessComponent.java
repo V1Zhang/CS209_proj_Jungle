@@ -8,7 +8,7 @@ import java.awt.*;
  * This is the equivalent of the ChessPiece class,
  * but this class only cares how to draw Chess on ChessboardComponent
  */
-public class RatChessComponent extends JComponent {
+public class RatChessComponent extends AnimalChessComponent {
     private PlayerColor owner;
 
     private boolean selected;
