@@ -1,10 +1,7 @@
 package controller;
 
 import listener.GameListener;
-import model.Constant;
-import model.PlayerColor;
-import model.Chessboard;
-import model.ChessboardPoint;
+import model.*;
 import view.*;
 
 import java.util.ArrayList;
@@ -49,19 +46,42 @@ public class GameController implements GameListener {
         currentPlayer = currentPlayer == PlayerColor.BLUE ? PlayerColor.RED : PlayerColor.BLUE;
     }
 
-    private boolean win() {
-        // TODO: Check the board if there is a winner
-        return false;
+    private void densWin() {
+        winner = currentPlayer;
+        System.out.println("Winner is " + winner);
+    }
+
+    private void annihilateWin() {
+        if (model.checkAnnihilate(currentPlayer)) {
+            winner = currentPlayer;
+            System.out.println("Winner is " + winner);
+        }
     }
 
 
+    public void showValidMoves(ChessboardPoint point) {
+        validMoves = model.getValidMoves(point);
+        view.showValidMoves(validMoves);
+    }
+    //showValidMoves() 方法首先调用了 model.getValidMoves(point) 方法，
+    // 获取指定位置棋子的所有可移动位置，将结果保存在成员变量 validMoves 中。
+    // 接下来，它调用视图层的 showValidMoves(validMoves) 方法，将可移动位置传递给视图层，
+    // 让视图层根据这些位置来更新棋盘的显示。
+
+    public void hideValidMoves() {
+        view.hideValidMoves(validMoves);
+    }//hideValidMoves() 方法则相反，它调用视图层的 hideValidMoves(validMoves) 方法，让视图层隐藏之前展示的可移动位置。
 
     // click an empty cell
     @Override
     public void onPlayerClickCell(ChessboardPoint point, CellComponent component) {
+        //如果当前是选中棋子的状态，那么此时需要调用 model.selectPiece(point) 方法来选中当前格子上的棋子；
+        // 如果当前是移动棋子的状态，那么需要调用 model.movePiece(selectedPiece, point) 方法来移动选中的棋子。
+        // 同时，无论何时，该方法都需要调用 showValidMoves(point) 方法来让视图层展示当前棋子的可移动位置。
         if (selectedPoint != null && model.isValidMove(selectedPoint, point)) {
-
-
+            hideValidMoves();
+            Step step = model.recordStep(selectedPoint, point, currentPlayer, turnCount);
+            //stepList.add(step);
             model.solveTrap(selectedPoint,point);
             model.moveChessPiece(selectedPoint, point);
             view.setChessComponentAtGrid(point, view.removeChessComponentAtGrid(selectedPoint));
@@ -125,10 +145,5 @@ public class GameController implements GameListener {
 
 
     }
-
-
-
-
-
 }
 

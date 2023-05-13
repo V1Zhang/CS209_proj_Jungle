@@ -353,23 +353,57 @@ public class Chessboard {
             for (int j = 0; j < 7; j++) {
                 ChessboardPoint point = new ChessboardPoint(i, j);
                 if (getChessPieceAt(point) != null && getChessPieceAt(point).getOwner() != currentPlayer) {
-                    // 检查敌方棋子周围是否全是己方等级更高的棋子
-                    for (int k = 0; k < 4; k++) {
-                        ChessboardPoint neighbor = point.getNeighbor(k);
-                        if (neighbor.getRow()<0 || neighbor.getRow()>8 || neighbor.getCol()<0 || neighbor.getCol()>6) {
-                            continue;
-                        }
-                        if (getChessPieceAt(neighbor) == null || (getChessPieceAt(neighbor).getOwner() == currentPlayer
-                                && getChessPieceAt(neighbor).getRank() < getChessPieceAt(point).getRank())) {
-                            return false;
+                    //这个条件是敌方有棋子
+                    //现在锁定的point就是敌方的棋子
+
+                    if (point.getRow()-1>=0) {//锁定的这个敌方棋子左边有棋子
+                        ChessboardPoint a = new ChessboardPoint(point.getRow() - 1, point.getCol());//这个敌方棋子左边的棋子
+                        if (getChessPieceAt(a)==null){
+                            ;
+                        }else if (getChessPieceAt(a).getOwner()==currentPlayer&&getChessPieceAt(a).getRank()>=getChessPieceAt(point).getRank()){//能吃敌方棋子
+                         continue;
                         }
                     }
+                    if (point.getRow()+1>=0) {//锁定的这个敌方棋子右边有棋子
+                        ChessboardPoint a = new ChessboardPoint(point.getRow()+1, point.getCol());//这个敌方棋子右边的棋子
+                        if (getChessPieceAt(a)==null){
+                            ;
+                        }else if (getChessPieceAt(a).getOwner()==currentPlayer&&getChessPieceAt(a).getRank()>=getChessPieceAt(point).getRank()){//能吃敌方棋子
+                            continue;
+                        }
+                    }
+                    if (point.getCol()-1>=0) {//锁定的这个敌方棋子左边有棋子
+                        ChessboardPoint a = new ChessboardPoint(point.getRow(), point.getCol()-1);//这个敌方棋子上边的棋子
+                        if (getChessPieceAt(a)==null){
+                            ;
+                        }else if (getChessPieceAt(a).getOwner()==currentPlayer&&getChessPieceAt(a).getRank()>=getChessPieceAt(point).getRank()){//能吃敌方棋子
+                            continue;
+                        }
+                    }
+                    if (point.getCol()+1>=0) {//锁定的这个敌方棋子左边有棋子
+                        ChessboardPoint a = new ChessboardPoint(point.getRow(), point.getCol()+1);//这个敌方棋子左边的棋子
+                        if (getChessPieceAt(a)==null){
+                            ;
+                        }else if (getChessPieceAt(a).getOwner()==currentPlayer&&getChessPieceAt(a).getRank()>=getChessPieceAt(point).getRank()){//能吃敌方棋子
+                            continue;
+                        }
+                    }
+                    return false;
                 }
             }
         }
+        //到这是：敌方没有棋子了！
         System.out.println("Annihilate!");
         return true;
     }
+    //这个方法接受当前玩家的颜色作为参数，然后在棋盘上检查是否还有敌方棋子，如果有则返回 false，否则返回 true。
+    // 为了做到这一点，方法使用嵌套的 for 循环来遍历棋盘中的每个点，调用 getChessPieceAt(point) 方法获取该点上的棋子，并检查它的所有者是否与当前玩家相同。
+    // 如果找到了敌方棋子，则返回 false，从而表示还有棋子；
+    // 如果所有点都被遍历且没有找到敌方棋子，则返回 true。
+
+
+
+    //如果检测到可以走或可以吃，则将该位置保存到一个List集合availablePoints中，最后将所有可用的位置返回。
     public List<ChessboardPoint> getValidMoves(ChessboardPoint point) {
         List<ChessboardPoint> availablePoints = new ArrayList<>();
         // 检查整张棋盘，用isValidMove()方法检查每个格子是否可以移动到，同时也用isValidCapture()方法检查每个格子是否可以吃掉
@@ -396,5 +430,43 @@ public class Chessboard {
         }
         return availablePoints;
     }
+
+    public List<Step> getValidSteps(PlayerColor color){//获取当前玩家可用的所有合法走法，并将它们保存在一个List集合中
+        List<Step> availableSteps = new ArrayList<>();
+        List<ChessboardPoint> availablePoints = getValidPoints(color);
+        //首先，这个方法调用了getValidPoints()方法获取当前玩家可以移动的所有棋子的位置，得到一个List集合availablePoints。
+        for (ChessboardPoint point : availablePoints) {
+            List<ChessboardPoint> validMoves = getValidMoves(point);
+            //然后，对于每个可用位置，使用getValidMoves()方法获取该棋子可以移动到的所有合法位置，得到另外一个List集合validMoves。
+            for (ChessboardPoint destPoint : validMoves) {
+                availableSteps.add(recordStep(point, destPoint, color, 0));
+                //接下来，对于每个起点位置和目标位置的组合，调用recordStep()方法记录这个移动到一个新的Step对象中，并将这个Step对象添加到availableSteps集合中。
+            }
+        }
+        return availableSteps;//返回所有可用的步骤。
+    }
+    public Step recordStep(ChessboardPoint fromPoint, ChessboardPoint toPoint, PlayerColor currentPlayer, int turn){
+        ChessPiece fromPiece = getChessPieceAt(fromPoint);
+        ChessPiece toPiece = getChessPieceAt(toPoint);
+        return new Step(fromPoint, toPoint, fromPiece, toPiece, currentPlayer, turn);
+    }
+
+    public void undoStep(Step step){
+        ChessboardPoint fromPoint = step.getFrom();
+        ChessboardPoint toPoint = step.getTo();
+        ChessPiece fromPiece = step.getFromChessPiece();
+        ChessPiece toPiece = step.getToChessPiece();
+        setChessPiece(toPoint, toPiece);
+        setChessPiece(fromPoint, fromPiece);
+    }
+
+    public void runStep(Step step){
+        ChessboardPoint fromPoint = step.getFrom();
+        ChessboardPoint toPoint = step.getTo();
+        ChessPiece fromPiece = step.getFromChessPiece();
+        setChessPiece(fromPoint, null);
+        setChessPiece(toPoint, fromPiece);
+    }
+
 }
 
