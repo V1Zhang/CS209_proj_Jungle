@@ -79,11 +79,12 @@ public class ChessGameFrame extends JFrame {
         this.getLayeredPane().add(statusLabel, JLayeredPane.MODAL_LAYER);
     }
     private void addStartButton() {
-        JButton button = new JButton("New Round");
+        ImageIcon img = createAutoAdjustIcon("src/images/restart.jpg", true);
+        JButton button = new JButton(img);
         //button.setContentAreaFilled(false);
         button.setBorder(null);
         button.setLocation(HEIGTH, HEIGTH / 10 + 120);
-        button.setSize(200, 60);
+        button.setSize(170, 60);
         button.setFont(new Font("Rockwell", Font.BOLD, 20));
         this.getLayeredPane().add(button, JLayeredPane.MODAL_LAYER);
         button.addActionListener((e) -> {
@@ -98,10 +99,11 @@ public class ChessGameFrame extends JFrame {
     }
     //悔棋功能：尚未设置首次移动前不能使用
     private void addUndoButton(){
-        JButton button = new JButton("Undo");
+        ImageIcon img = createAutoAdjustIcon("src/images/undo.jpg", true);
+        JButton button = new JButton(img);
         button.setBorder(null);
         button.setLocation(HEIGTH, HEIGTH / 10 + 200);
-        button.setSize(200, 60);
+        button.setSize(170, 60);
         button.setFont(new Font("Rockwell", Font.BOLD, 20));
         this.getLayeredPane().add(button, JLayeredPane.MODAL_LAYER);
         button.addActionListener((e) -> {
@@ -114,10 +116,11 @@ public class ChessGameFrame extends JFrame {
         });
     }
     private void addSettingButton(){
-        JButton button = new JButton("Setting");
+        ImageIcon img = createAutoAdjustIcon("src/images/setting.jpg", true);
+        JButton button = new JButton(img);
         button.setBorder(null);
         button.setLocation(HEIGTH, HEIGTH / 10 + 280);
-        button.setSize(200, 60);
+        button.setSize(170, 60);
         button.setFont(new Font("Rockwell", Font.BOLD, 20));
         this.getLayeredPane().add(button, JLayeredPane.MODAL_LAYER);
         button.addActionListener((e) -> {
@@ -127,10 +130,11 @@ public class ChessGameFrame extends JFrame {
         });
     }
     private void addHelpButton(){
-        JButton button = new JButton("Help");
+        ImageIcon img = createAutoAdjustIcon("src/images/help.jpg", true);
+        JButton button = new JButton(img);
         button.setBorder(null);
         button.setLocation(HEIGTH, HEIGTH / 10 + 360);
-        button.setSize(200, 60);
+        button.setSize(170, 60);
         button.setFont(new Font("Rockwell", Font.BOLD, 20));
         this.getLayeredPane().add(button, JLayeredPane.MODAL_LAYER);
         button.addActionListener((e) -> {
@@ -150,9 +154,10 @@ public class ChessGameFrame extends JFrame {
     }
 
     private void addLoadButton() {
-        JButton button = new JButton("Load");
+        ImageIcon img = createAutoAdjustIcon("src/images/load.jpg", true);
+        JButton button = new JButton(img);
         button.setLocation(HEIGTH, HEIGTH / 10 +440);
-        button.setSize(100, 60);
+        button.setSize(85, 60);
         button.setFont(new Font("Rockwell", Font.BOLD, 20));
         this.getLayeredPane().add(button, JLayeredPane.MODAL_LAYER);
         button.addActionListener(e -> {
@@ -161,9 +166,10 @@ public class ChessGameFrame extends JFrame {
         });
     }
     private void addSaveButton(){
-        JButton button = new JButton("Save");
-        button.setLocation(HEIGTH+103, HEIGTH / 10 +440);
-        button.setSize(100, 60);
+        ImageIcon img = createAutoAdjustIcon("src/images/save.jpg", true);
+        JButton button = new JButton(img);
+        button.setLocation(HEIGTH+95, HEIGTH / 10 +440);
+        button.setSize(85, 60);
         button.setFont(new Font("Rockwell", Font.BOLD, 20));
         this.getLayeredPane().add(button, JLayeredPane.MODAL_LAYER);
         button.addActionListener(e -> {
@@ -171,7 +177,7 @@ public class ChessGameFrame extends JFrame {
             chessboardComponent.getGameController().save();
         });
     }
-/*
+
     private void addCurrentPlayerLable(){
         PlayerColor currentPlayer = chessboardComponent.getGameController().getCurrentPlayer();
         JLabel statusLabel = new JLabel(currentPlayer.toString()  + "'s turn");
@@ -180,6 +186,8 @@ public class ChessGameFrame extends JFrame {
         statusLabel.setFont(new Font("", Font.BOLD, 40));
         this.getLayeredPane().add(statusLabel, JLayeredPane.MODAL_LAYER);
         }
- */
+        private void addLable(){
+
+        }
 
 }
