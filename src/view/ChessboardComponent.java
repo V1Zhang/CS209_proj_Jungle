@@ -24,7 +24,7 @@ public class ChessboardComponent extends JComponent {
     private final Set<ChessboardPoint> denCell = new HashSet<>();
 
 
-    private GameController gameController;
+    public GameController gameController;
 
     public ChessboardComponent(int chessSize) {
         CHESS_SIZE = chessSize;
@@ -47,8 +47,6 @@ public class ChessboardComponent extends JComponent {
         Cell[][] grid = chessboard.getGrid();
         for (int i = 0; i < CHESSBOARD_ROW_SIZE.getNum(); i++) {
             for (int j = 0; j < CHESSBOARD_COL_SIZE.getNum(); j++) {
-                // TODO: Implement the initialization checkerboard
-
                 if (grid[i][j].getPiece() != null) {
                     ChessPiece chessPiece = grid[i][j].getPiece();
                     System.out.println(chessPiece.getOwner());
@@ -179,5 +177,17 @@ public class ChessboardComponent extends JComponent {
                 gameController.onPlayerClickChessPiece(getChessboardPoint(e.getPoint()), (AnimalChessComponent) clickedComponent.getComponents()[0]);
             }
         }
+    }
+
+
+
+
+
+
+    public void setGameController(GameController gameController) {
+        this.gameController = gameController;
+    }
+    public GameController getGameController(){
+        return gameController;
     }
 }
