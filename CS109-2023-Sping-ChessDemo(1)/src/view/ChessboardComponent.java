@@ -1,7 +1,7 @@
 package view;
 import controller.GameController;
 import model.*;
-
+import view.AnimalChessComponent.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.List;
 
 import static model.Constant.CHESSBOARD_COL_SIZE;
 import static model.Constant.CHESSBOARD_ROW_SIZE;
@@ -180,4 +181,28 @@ public class ChessboardComponent extends JComponent {
             }
         }
     }
+
+    public void showValidMoves(List<ChessboardPoint> validMoves) {
+        for (ChessboardPoint validMove : validMoves) {
+            CellComponent cellComponent = getGridComponentAt(validMove);
+            cellComponent.setValidMove(true);
+            paintImmediately(this.getBounds());
+        }
+    }
+    public void hideValidMoves(List<ChessboardPoint> validMoves) {
+        for (ChessboardPoint validMove : validMoves) {
+            CellComponent cellComponent = getGridComponentAt(validMove);
+            cellComponent.setValidMove(false);
+//            System.out.println("hide valid move" + validMove);
+        }
+    }
+
+    public GameController getGameController() {
+        return gameController;
+    }
+
+    public void setGameController(GameController gameController) {
+        this.gameController = gameController;
+    }
+
 }
