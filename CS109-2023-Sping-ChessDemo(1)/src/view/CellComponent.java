@@ -10,7 +10,10 @@ import java.awt.*;
 
 public class CellComponent extends JPanel {
     private Color background;
-
+    private GridType gridType;
+    private boolean validMove;
+    private boolean hovered;
+    private int cornerRadius;
     public CellComponent(Color background, Point location, int size) {
         setLayout(new GridLayout(1,1));
         setLocation(location);
@@ -24,4 +27,8 @@ public class CellComponent extends JPanel {
         g.setColor(background);
         g.fillRect(1, 1, this.getWidth()-1, this.getHeight()-1);
     }
+    public void setValidMove(boolean validMove) {
+        this.validMove = validMove;
+    }
+
 }
