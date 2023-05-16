@@ -43,8 +43,11 @@ public class ChessGameFrame extends JFrame {
         addLoadButton();
         addSaveButton();
 
+
         //addCurrentPlayerLable();
+        //addRoundsNumLable();
        }
+
     private void addBG() {
         //ImageIcon img = new ImageIcon("src/images/bg1.jpg");
         ImageIcon img = createAutoAdjustIcon("src/images/bg1.jpg", true);
@@ -68,6 +71,7 @@ public class ChessGameFrame extends JFrame {
         chessboardComponent = new ChessboardComponent(ONE_CHESS_SIZE);
         chessboardComponent.setLocation(HEIGTH / 5, HEIGTH / 15);
         this.getLayeredPane().add(chessboardComponent, JLayeredPane.MODAL_LAYER);
+
     }
     private void addLabel() {
         JLabel statusLabel = new JLabel("-Jungle-");
@@ -181,13 +185,17 @@ public class ChessGameFrame extends JFrame {
     private void addCurrentPlayerLable(){
         PlayerColor currentPlayer = chessboardComponent.getGameController().getCurrentPlayer();
         JLabel statusLabel = new JLabel(currentPlayer.toString()  + "'s turn");
-        statusLabel.setLocation(800, HEIGTH / 500);
-        statusLabel.setSize(200, 80);
+        statusLabel.setLocation(800, HEIGTH-300);
+        statusLabel.setSize(100, 80);
         statusLabel.setFont(new Font("", Font.BOLD, 40));
         this.getLayeredPane().add(statusLabel, JLayeredPane.MODAL_LAYER);
         }
-        private void addLable(){
-
+        private void addRoundsNumLable(){
+            int turnCount = chessboardComponent.getGameController().getTurnCount();
+            JLabel statusLabel = new JLabel("Turn:"+ turnCount);
+            statusLabel.setLocation(800, HEIGTH -100);
+            statusLabel.setSize(100, 80);
+            statusLabel.setFont(new Font("", Font.BOLD, 40));
+            this.getLayeredPane().add(statusLabel, JLayeredPane.MODAL_LAYER);
         }
-
 }

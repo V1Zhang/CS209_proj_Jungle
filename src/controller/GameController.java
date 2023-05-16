@@ -1,14 +1,11 @@
 package controller;
 
 import listener.GameListener;
-import model.Constant;
-import model.PlayerColor;
-import model.Chessboard;
-import model.ChessboardPoint;
+import model.*;
 import view.*;
+import view.ChessComponent.AnimalChessComponent;
 
 import javax.swing.*;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
@@ -42,9 +39,6 @@ public class GameController implements GameListener {
         view.repaint();
     }
 
-    public PlayerColor getCurrentPlayer() {
-        return currentPlayer;
-    }
 
     private void initialize() {
         for (int i = 0; i < Constant.CHESSBOARD_ROW_SIZE.getNum(); i++) {
@@ -58,19 +52,49 @@ public class GameController implements GameListener {
         currentPlayer = currentPlayer == PlayerColor.BLUE ? PlayerColor.RED : PlayerColor.BLUE;
     }
 
-    private boolean win() {
-        // TODO: Check the board if there is a winner
-        return false;
+    private void win(){//吃光对方所有棋子或进入对方兽穴-取胜
+        if(model.checkAnnihilate(currentPlayer)==true) {
+            winner = currentPlayer;
+        } else if (view.getGridComponentAt(new ChessboardPoint(0,3)) != null) {
+            winner = PlayerColor.RED;
+        } else if (view.getGridComponentAt(new ChessboardPoint(8,3)) != null) {
+            winner = PlayerColor.BLUE;
+        }
+        System.out.println("The winner is:"+winner);
+            JOptionPane.showMessageDialog(null, "The winner is:RED","Winner:",1);
+
     }
+
+
+
+
+
+
+    public void showValidMoves(ChessboardPoint point) {
+        validMoves = model.getValidMoves(point);
+        view.showValidMoves(validMoves);
+    }
+    //showValidMoves() 方法首先调用了 model.getValidMoves(point) 方法，
+    // 获取指定位置棋子的所有可移动位置，将结果保存在成员变量 validMoves 中。
+    // 接下来，它调用视图层的 showValidMoves(validMoves) 方法，将可移动位置传递给视图层，
+    // 让视图层根据这些位置来更新棋盘的显示。
+
+    public void hideValidMoves() {
+        view.hideValidMoves(validMoves);
+    }//hideValidMoves() 方法则相反，它调用视图层的 hideValidMoves(validMoves) 方法，让视图层隐藏之前展示的可移动位置。
 
 
 
     // click an empty cell
     @Override
     public void onPlayerClickCell(ChessboardPoint point, CellComponent component) {
+        //如果当前是选中棋子的状态，那么此时需要调用 model.selectPiece(point) 方法来选中当前格子上的棋子；
+        // 如果当前是移动棋子的状态，那么需要调用 model.movePiece(selectedPiece, point) 方法来移动选中的棋子。
+        // 同时，无论何时，该方法都需要调用 showValidMoves(point) 方法来让视图层展示当前棋子的可移动位置。
         if (selectedPoint != null && model.isValidMove(selectedPoint, point)) {
-
-
+            hideValidMoves();
+            Step step = model.recordStep(selectedPoint, point, currentPlayer, turnCount);
+            //stepList.add(step);
             model.solveTrap(selectedPoint,point);
             model.moveChessPiece(selectedPoint, point);
             view.setChessComponentAtGrid(point, view.removeChessComponentAtGrid(selectedPoint));
@@ -81,9 +105,12 @@ public class GameController implements GameListener {
             selectedPoint = null;
             swapColor();
             view.repaint();
+            turnCount++;
             // TODO: if the chess enter Dens or Traps and so on
         }
+
     }
+
 
     // click a cell with a chess
     //这段代码是一个 ChessComponent 的事件处理方法，处理某个玩家点击棋盘上的棋子时的行为。
@@ -106,21 +133,21 @@ public class GameController implements GameListener {
             component.repaint();
             //在这段代码中，使用了 model.getChessPieceOwner() 方法获取指定棋子的所有者，并将其与 currentPlayer 进行比较，以判断棋子是否属于当前玩家。
             //注释掉的 throw 语句表示如果判断为非法落子或移动，将会抛出一个 IllegalArgumentException 异常。
-        } else {//    如果之前已经选中一个棋子，且当前点击的棋子位置和该棋子位置不同，
+        } else{//    如果之前已经选中一个棋子，且当前点击的棋子位置和该棋子位置不同，
             // 则判断是否符合规则调用 model.isValidCapture() 方法进行判断。
             // 如果不符合规则则打印提示信息并返回，否则执行下面的逻辑。
-            if (model.isValidCapture(selectedPoint, point)) {
+            if (model.isValidCapture(selectedPoint,point)){
                 model.captureChessPiece(selectedPoint, point);
                 view.removeChessComponentAtGrid(point);
                 view.setChessComponentAtGrid(point, view.removeChessComponentAtGrid(selectedPoint));
                 selectedPoint = null;
                 view.repaint();
-            } else {
+                win();
+            }
+            else{
                 System.out.println("Illegal chess capture!");
-                return;
             }
         }
-    }
         // 如果指定的棋子落子或者棋子移动不符合规则，将会打印出 "Illegal chess capture!" 的消息，
         // 并且结束当前方法（通过 return 关键字）。
         // 其中，model 是一个 ChessBoardModel 类型的对象，
@@ -130,6 +157,16 @@ public class GameController implements GameListener {
         // 如果 isValidCapture() 返回 false，将会执行打印语句和 return 语句，否则直接执行下面的代码。
         // 同时，被注释掉的 throw 语句表示如果判断为非法落子或移动，将会抛出一个 IllegalArgumentException 异常。
         // TODO: Implement capture function
+
+
+
+
+    }
+
+
+
+
+
 
         public void restart(){
 
@@ -146,7 +183,28 @@ public class GameController implements GameListener {
             //view.getChessGameFrame().updateStatus("");
 
         }
-        public void undo(){
+       public void undo(){
+  /*     if (stepList.isEmpty()) {
+            return;
+        }
+            Step step = stepList.remove(stepList.size() - 1);
+            model.undoStep(step);
+            view.undoStep(step);
+            view.repaint();
+            swapColor(true);
+            if (gameMode == GameMode.AI_1 || gameMode == GameMode.AI_2 || gameMode ==  gameMode.AI_3 ) {
+                step = stepList.remove(stepList.size() - 1);
+                model.undoStep(step);
+                view.undoStep(step);
+                view.repaint();
+                swapColor(true);
+            }
+
+   */
+
+
+
+
 
         }
         public void load() {
@@ -174,6 +232,11 @@ public class GameController implements GameListener {
             int returnVal = chooser.showOpenDialog(null);
 
         }
-
+    public PlayerColor getCurrentPlayer() {
+        return currentPlayer;
+    }
+    public int getTurnCount() {
+        return turnCount;
+    }
 }
 

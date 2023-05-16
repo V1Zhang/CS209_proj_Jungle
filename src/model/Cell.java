@@ -9,6 +9,7 @@ import java.io.Serializable;
 public class Cell implements Serializable {
     // the position for chess
     private ChessPiece piece;
+
     private GridType type;
     private PlayerColor owner;
     public Cell(GridType type) {
@@ -19,6 +20,7 @@ public class Cell implements Serializable {
     public ChessPiece getPiece() {
         return piece;
     }
+
     public void setPiece(ChessPiece piece) {
         this.piece = piece;
     }

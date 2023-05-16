@@ -59,11 +59,9 @@ public class ChessboardPoint {
         ChessboardPoint temp = (ChessboardPoint) obj;
         return (temp.getRow() == this.row) && (temp.getCol() == this.col);
     }
-
-
-
     @Override
     public String toString() {
         return "("+row + ","+col+") " + "on the chessboard is clicked!";
     }
+
 }

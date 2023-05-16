@@ -1,17 +1,18 @@
 package view;
 import controller.GameController;
 import model.*;
+import view.ChessComponent.*;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
+import java.util.List;
 
 import static model.Constant.CHESSBOARD_COL_SIZE;
 import static model.Constant.CHESSBOARD_ROW_SIZE;
+import static view.SwingUtil.createAutoAdjustIcon;
 
 /**
  * This class represents the checkerboard component object on the panel
@@ -43,7 +44,7 @@ public class ChessboardComponent extends JComponent {
      * This method represents how to initiate ChessComponent
      * according to Chessboard information
      */
-    public void initiateChessComponent(Chessboard chessboard) {
+    public void initiateChessComponent(Chessboard chessboard) { //初始单元格
         Cell[][] grid = chessboard.getGrid();
         for (int i = 0; i < CHESSBOARD_ROW_SIZE.getNum(); i++) {
             for (int j = 0; j < CHESSBOARD_COL_SIZE.getNum(); j++) {
@@ -80,7 +81,7 @@ public class ChessboardComponent extends JComponent {
 
     }
 
-    public void initiateGridComponents() {
+    public void initiateGridComponents() { //初始棋子
         //左
         riverCell.add(new ChessboardPoint(3,1));
         riverCell.add(new ChessboardPoint(3,2));
@@ -146,11 +147,11 @@ public class ChessboardComponent extends JComponent {
         return chess;
     }
 
-    private CellComponent getGridComponentAt(ChessboardPoint point) {
+    public CellComponent getGridComponentAt(ChessboardPoint point) {
         return gridComponents[point.getRow()][point.getCol()];
     }
 
-    private ChessboardPoint getChessboardPoint(Point point) {
+    public ChessboardPoint getChessboardPoint(Point point) {
         System.out.println("[" + point.y/CHESS_SIZE +  ", " +point.x/CHESS_SIZE + "] Clicked");
         return new ChessboardPoint(point.y/CHESS_SIZE, point.x/CHESS_SIZE);
     }
@@ -179,7 +180,20 @@ public class ChessboardComponent extends JComponent {
         }
     }
 
-
+    public void showValidMoves(List<ChessboardPoint> validMoves) {
+        for (ChessboardPoint validMove : validMoves) {
+            CellComponent cellComponent = getGridComponentAt(validMove);
+            cellComponent.setValidMove(true);
+            paintImmediately(this.getBounds());
+        }
+    }
+    public void hideValidMoves(List<ChessboardPoint> validMoves) {
+        for (ChessboardPoint validMove : validMoves) {
+            CellComponent cellComponent = getGridComponentAt(validMove);
+            cellComponent.setValidMove(false);
+//            System.out.println("hide valid move" + validMove);
+        }
+    }
 
 
 
@@ -190,4 +204,6 @@ public class ChessboardComponent extends JComponent {
     public GameController getGameController(){
         return gameController;
     }
+
+
 }
