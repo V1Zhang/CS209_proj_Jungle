@@ -12,7 +12,6 @@ public class ChessboardPoint {
         this.row = row;
         this.col = col;
     }
-
     public int getRow() {
         return row;
     }
@@ -43,6 +42,10 @@ public class ChessboardPoint {
             default:
                 return null;
         }
+    }
+    public static ChessboardPoint getChessboardPoint(int row,int col){
+        ChessboardPoint point = new ChessboardPoint(row, col);
+        return point;
     }
 
     @Override

@@ -18,7 +18,7 @@ import static view.SwingUtil.createAutoAdjustIcon;
  * This class represents the checkerboard component object on the panel
  */
 public class ChessboardComponent extends JComponent {
-    private final CellComponent[][] gridComponents = new CellComponent[CHESSBOARD_ROW_SIZE.getNum()][CHESSBOARD_COL_SIZE.getNum()];
+    private static final CellComponent[][] gridComponents = new CellComponent[CHESSBOARD_ROW_SIZE.getNum()][CHESSBOARD_COL_SIZE.getNum()];
     private final int CHESS_SIZE;
     private final Set<ChessboardPoint> riverCell = new HashSet<>();
     private final Set<ChessboardPoint> trapCell = new HashSet<>();
@@ -44,7 +44,7 @@ public class ChessboardComponent extends JComponent {
      * This method represents how to initiate ChessComponent
      * according to Chessboard information
      */
-    public void initiateChessComponent(Chessboard chessboard) { //初始单元格
+    public void initiateChessComponent(Chessboard chessboard) { //初始棋子
         Cell[][] grid = chessboard.getGrid();
         for (int i = 0; i < CHESSBOARD_ROW_SIZE.getNum(); i++) {
             for (int j = 0; j < CHESSBOARD_COL_SIZE.getNum(); j++) {
@@ -81,7 +81,7 @@ public class ChessboardComponent extends JComponent {
 
     }
 
-    public void initiateGridComponents() { //初始棋子
+    public void initiateGridComponents() { //初始棋盘格
         //左
         riverCell.add(new ChessboardPoint(3,1));
         riverCell.add(new ChessboardPoint(3,2));
@@ -108,8 +108,8 @@ public class ChessboardComponent extends JComponent {
         denCell.add(new ChessboardPoint(0,3));
         denCell.add(new ChessboardPoint(8,3));
 
-        for (int i = 0; i < CHESSBOARD_ROW_SIZE.getNum(); i++) {
-            for (int j = 0; j < CHESSBOARD_COL_SIZE.getNum(); j++) {
+        for (int i = 0; i < 9; i++) {
+            for (int j = 0; j < 7; j++) {
                 ChessboardPoint temp = new ChessboardPoint(i, j);
                 CellComponent cell;
                 if (riverCell.contains(temp)) {
@@ -138,7 +138,7 @@ public class ChessboardComponent extends JComponent {
         getGridComponentAt(point).add(chess);
     }
 
-    public AnimalChessComponent removeChessComponentAtGrid(ChessboardPoint point) {
+    public static AnimalChessComponent removeChessComponentAtGrid(ChessboardPoint point) {
         // Note re-validation is required after remove / removeAll.
         AnimalChessComponent chess = (AnimalChessComponent) getGridComponentAt(point).getComponents()[0];
         getGridComponentAt(point).removeAll();
@@ -146,8 +146,16 @@ public class ChessboardComponent extends JComponent {
         chess.setSelected(false);
         return chess;
     }
+    public static AnimalChessComponent getAnimalChessComponent(ChessboardPoint point) throws ArrayIndexOutOfBoundsException{
+        try {
+            AnimalChessComponent chess = (AnimalChessComponent) getGridComponentAt(point).getComponents()[0];
+            return chess;
+        }catch(ArrayIndexOutOfBoundsException e){
+            return null;
+        }
+    }
 
-    public CellComponent getGridComponentAt(ChessboardPoint point) {
+    public static CellComponent getGridComponentAt(ChessboardPoint point) {
         return gridComponents[point.getRow()][point.getCol()];
     }
 
@@ -187,16 +195,6 @@ public class ChessboardComponent extends JComponent {
             paintImmediately(this.getBounds());
         }
     }
-    public void hideValidMoves(List<ChessboardPoint> validMoves) {
-        for (ChessboardPoint validMove : validMoves) {
-            CellComponent cellComponent = getGridComponentAt(validMove);
-            cellComponent.setValidMove(false);
-//            System.out.println("hide valid move" + validMove);
-        }
-    }
-
-
-
 
     public void setGameController(GameController gameController) {
         this.gameController = gameController;
@@ -204,6 +202,5 @@ public class ChessboardComponent extends JComponent {
     public GameController getGameController(){
         return gameController;
     }
-
 
 }

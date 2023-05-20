@@ -1,9 +1,13 @@
 package model;
 
+
+import view.ChessboardComponent;
 import view.GridType;
 
 import java.util.*;
 
+
+import static view.ChessboardComponent.removeChessComponentAtGrid;
 import static view.GridType.RIVER;
 
 /**
@@ -11,10 +15,11 @@ import static view.GridType.RIVER;
  * The Chessboard has 9*7 cells, and each cell has a position for chess
  */
 public class Chessboard {
-    private Cell[][] grid;
+    private static Cell[][] grid;
     private final Set<ChessboardPoint> riverCell = new HashSet<>();
     private final Set<ChessboardPoint> trapCell = new HashSet<>();
     private final Set<ChessboardPoint> denCell = new HashSet<>();
+    public static ChessboardComponent chessboardComponent;
 
     public Chessboard() {
         this.grid =
@@ -23,7 +28,6 @@ public class Chessboard {
         initGrid();
         initPieces();
     }
-
     private void initSet() {//定义三种类型cell位置
         riverCell.add(new ChessboardPoint(3,1));
         riverCell.add(new ChessboardPoint(3,2));
@@ -53,31 +57,36 @@ public class Chessboard {
     private void initGrid() {//利用遍历对确定类型的位置放Cell
         for (int i = 0; i < Constant.CHESSBOARD_ROW_SIZE.getNum(); i++) {
             for (int j = 0; j < Constant.CHESSBOARD_COL_SIZE.getNum(); j++) {
-                if(riverCell.contains(new ChessboardPoint(i,j))) {
+                if (riverCell.contains(new ChessboardPoint(i, j))) {
                     grid[i][j] = new Cell(RIVER);
-                } else if (trapCell.contains(new ChessboardPoint(i,j))) {
-                    grid[i][j]=new Cell(GridType.TRAP);
-                    if (i<2){
+                } else if (trapCell.contains(new ChessboardPoint(i, j))) {
+                    grid[i][j] = new Cell(GridType.TRAP);
+                    if (i < 2) {
                         grid[i][j].setOwner(PlayerColor.RED);
-                    }else{
+                    } else {
                         grid[i][j].setOwner(PlayerColor.BLUE);
                     }
-                }else if(denCell.contains(new ChessboardPoint(i,j))){
-                    grid[i][j]=new Cell(GridType.DENS);
-                }else {
-                    grid[i][j]= new Cell(GridType.LAND);
+                } else if (denCell.contains(new ChessboardPoint(i, j))) {
+                    grid[i][j] = new Cell(GridType.DENS);
+                } else {
+                    grid[i][j] = new Cell(GridType.LAND);
                 }
             }
         }
     }
 
-    public void initPieces() {
-        //清空棋盘
+    public static void removeAllChess() {
         for (int i = 0; i < Constant.CHESSBOARD_ROW_SIZE.getNum(); i++) {
             for (int j = 0; j < Constant.CHESSBOARD_COL_SIZE.getNum(); j++) {
                 grid[i][j].removePiece();
+                removeChessComponentAtGrid(new ChessboardPoint(i,j));
+
             }
         }
+    }
+
+
+    public void initPieces() {
         grid[2][6].setPiece(new ChessPiece(PlayerColor.BLUE, "Elephant",8));
         grid[6][0].setPiece(new ChessPiece(PlayerColor.RED, "Elephant",8));
         grid[0][0].setPiece(new ChessPiece(PlayerColor.BLUE, "Lion",7));
@@ -96,11 +105,12 @@ public class Chessboard {
         grid[6][6].setPiece(new ChessPiece(PlayerColor.RED, "Rat",1));
     }
 
-    public ChessPiece getChessPieceAt(ChessboardPoint point) {
+
+    public static ChessPiece getChessPieceAt(ChessboardPoint point) {
         return getGridAt(point).getPiece();
     }
 
-    private Cell getGridAt(ChessboardPoint point) {
+    private static Cell getGridAt(ChessboardPoint point) {
         return grid[point.getRow()][point.getCol()];
     }
 
@@ -108,13 +118,15 @@ public class Chessboard {
         return Math.abs(src.getRow() - dest.getRow()) + Math.abs(src.getCol() - dest.getCol());
     }
 
-    private ChessPiece removeChessPiece(ChessboardPoint point) {
+
+
+    private ChessPiece removeChessPiece(ChessboardPoint point) { //移除棋子
         ChessPiece chessPiece = getChessPieceAt(point);
         getGridAt(point).removePiece();
         return chessPiece;
     }
 
-    private void setChessPiece(ChessboardPoint point, ChessPiece chessPiece) {
+    public static void setChessPiece(ChessboardPoint point, ChessPiece chessPiece) { //放置棋子
         getGridAt(point).setPiece(chessPiece);
     }
 
@@ -129,6 +141,8 @@ public class Chessboard {
         removeChessPiece(dest);
         setChessPiece(dest,removeChessPiece(src));
     }
+
+
 
     public Cell[][] getGrid() {
         return grid;
@@ -150,9 +164,9 @@ public class Chessboard {
             }
         }
         //狮子和老虎可以跳过河
-        if (calculateDistance(src,dest)>1&&(Objects.equals(getChessPieceAt(src).getName(), "Lion"))||(Objects.equals(getChessPieceAt(src).getName(), "Tiger"))){
+        if (calculateDistance(src,dest)>1&&(Objects.equals(getChessPieceAt(src).getName(), "Lion"))||(Objects.equals(getChessPieceAt(src).getName(), "Tiger"))) {
             //不能窜行跳跃
-            if (src.getRow()!= dest.getRow()&&src.getCol()!=dest.getCol()){
+            if (src.getRow() != dest.getRow() && src.getCol() != dest.getCol()) {
                 return false;
             }
             //两点之间全是河
@@ -161,54 +175,46 @@ public class Chessboard {
 
             //源位置和目标位置在棋盘上同一列的情况下，棋子在该列上是向左移动还是向右移动。如果源位置所在列小于目标位置所在列，那么棋子就向右移动，否则就向左移动。这里使用了一个三目运算符，如果条件成立则返回1，否则返回-1。最终得到的step值即为1或-1。
             //行一致
-            if (src.getRow()== dest.getRow()) {
-                int step=0;
-                int length=0;
+            if (src.getRow() == dest.getRow()) {
+                int moveCol = 1;
                 if (src.getCol() < dest.getCol()) {
-                    step = 1;
-                    length= dest.getCol()- src.getCol();
+                    ;
                 } else if (src.getCol() > dest.getCol()) {
-                    step = -1;
-                    length= -dest.getCol()+src.getCol();
+                    moveCol = -1;
                 }
-                int col= src.getCol();
-                for (int t=1;t<length;t++){
-                    col= col +t*step;
-                    if (getGridAt(new ChessboardPoint(src.getRow(),col)).getType()!=RIVER){
+
+                int col = src.getCol() + moveCol;
+                while (col != dest.getCol()) {
+                    if (getGridAt(new ChessboardPoint(src.getRow(), col)).getType() != RIVER) {
                         return false;
                     }
-                    if (getChessPieceAt(new ChessboardPoint(src.getRow(),col))!=null){
+                    if (getChessPieceAt(new ChessboardPoint(src.getRow(), col)) != null) {
                         return false;
                     }
-                    break;
+                    col = col + moveCol;
                 }
                 return true;
             }
             //列一致
-            if (src.getCol()== dest.getCol()) {
-                int step2=1;
-                int length2=0;
+            if (src.getCol() == dest.getCol()) {
+                int moveRow = 1;
                 if (src.getRow() < dest.getRow()) {
-                    length2= dest.getRow()- src.getRow();
+                    ;
                 } else if (src.getRow() > dest.getRow()) {
-                    step2 =-1;
-                    length2= -dest.getRow()+src.getRow();
+                    moveRow = -1;
                 }
-                int row= src.getRow();
-                for (int t=1;t<length2;t++){
-                    row= row+t*step2;
-                    if (getGridAt(new ChessboardPoint(row, src.getCol())).getType()!=RIVER)
+                int row = src.getRow() + moveRow;
+                while (row != dest.getRow()) {
+                    if (getGridAt(new ChessboardPoint(row, src.getCol())).getType() != RIVER)
                         return false;
-                    if (getChessPieceAt(new ChessboardPoint(row,src.getCol()))!=null){
+                    if (getChessPieceAt(new ChessboardPoint(row, src.getCol())) != null) {
                         return false;
                     }
-                    break;
+                    row = row + moveRow;
                 }
+                return true;
             }
-            return true;
         }
-
-
         // 不能走到自己的巢穴里
         if (getGridAt(dest).getType() == GridType.DENS && getGridAt(dest).getOwner() == getChessPieceAt(src).getOwner()) {
             return false;
@@ -243,53 +249,52 @@ public class Chessboard {
             }
             // 检查两个格子之间是否全为RIVER，如果是，则可以移动，否则不可以移动
             if (src.getRow() == dest.getRow()) {
-                int step=0;
-                int length=0;
+                int moveCol = 1;
                 if (src.getCol() < dest.getCol()) {
-                    step = 1;
-                    length= dest.getCol()- src.getCol();
+                    ;
                 } else if (src.getCol() > dest.getCol()) {
-                    step = -1;
-                    length= -dest.getCol()+src.getCol();
+                    moveCol = -1;
                 }
-                int col= src.getCol();
-                for (int t=1;t<length;t++){
-                    col= col+t*step;
-                    if (getGridAt(new ChessboardPoint(src.getRow(),col)).getType()!=RIVER){
+
+                int col = src.getCol() + moveCol;
+                while (col != dest.getCol()) {
+                    if (getGridAt(new ChessboardPoint(src.getRow(), col)).getType() != RIVER) {
                         return false;
                     }
-                    if (getChessPieceAt(new ChessboardPoint(src.getRow(),col))!=null){
+                    if (getChessPieceAt(new ChessboardPoint(src.getRow(), col)) != null) {
                         return false;
                     }
-                    break;
+                    col = col + moveCol;
                 }
-                return srcPiece.canCapture(destPiece);
+                if (getChessPieceAt(dest).getRank()>getChessPieceAt(src).getRank()){
+                    return false;
+                }
+                return true;
             }
             //列一致
-            if (src.getCol()== dest.getCol()) {
-                int step2=0;
-                int length2=0;
+            if (src.getCol() == dest.getCol()) {
+                int moveRow = 1;
                 if (src.getRow() < dest.getRow()) {
-                    step2 = 1;
-                    length2= dest.getRow()- src.getRow();
+                    ;
                 } else if (src.getRow() > dest.getRow()) {
-                    step2 = -1;
-                    length2= -dest.getRow()+src.getRow();
+                    moveRow = -1;
                 }
-                int row= src.getRow();
-                for (int t=1;t<length2;t++){
-                    row= row+t*step2;
-                    if (getGridAt(new ChessboardPoint(row, src.getCol())).getType()!=RIVER){
+                int row = src.getRow() + moveRow;
+                while (row != dest.getRow()) {
+                    if (getGridAt(new ChessboardPoint(row, src.getCol())).getType() != RIVER)
+                        return false;
+                    if (getChessPieceAt(new ChessboardPoint(row, src.getCol())) != null) {
                         return false;
                     }
-                    if (getChessPieceAt(new ChessboardPoint(row,src.getCol()))!=null){
-                        return false;
-                    }
-                    break;
+                    row = row + moveRow;
                 }
-                return srcPiece.canCapture(destPiece);
+                if (getChessPieceAt(dest).getRank()>getChessPieceAt(src).getRank()){
+                    return false;
+                }
+                return true;
             }
         }
+        solveTrap(src, dest);
         return calculateDistance(src, dest) == 1 && srcPiece.canCapture(destPiece);
     }
 
@@ -301,16 +306,10 @@ public class Chessboard {
 
     public void solveTrap(ChessboardPoint selectedPoint, ChessboardPoint destPoint) {
         if (getGridAt(destPoint).getType() == GridType.TRAP && getGridAt(destPoint).getOwner() != getChessPieceAt(selectedPoint).getOwner()) {
-            getTrapped(selectedPoint);
+            getTrapped(selectedPoint);  //进入陷阱
         } else if (getGridAt(selectedPoint).getType() == GridType.TRAP && getGridAt(selectedPoint).getOwner() != getChessPieceAt(selectedPoint).getOwner()) {
-            exitTrap(selectedPoint);
+            exitTrap(selectedPoint);  //逃出陷阱
         }
-    }
-    public boolean solveDens(ChessboardPoint destPoint) {
-        if (getGridAt(destPoint).getType() == GridType.DENS) {
-            return true;
-        }
-        return false;
     }
 
     public void getTrapped(ChessboardPoint point) {
@@ -348,7 +347,7 @@ public class Chessboard {
 
 
 
-
+/*
     public boolean checkAnnihilate(PlayerColor currentPlayer){
         // 检查是否还有敌方棋子
         for (int i = 0; i < 9; i++) {
@@ -398,6 +397,29 @@ public class Chessboard {
         System.out.println("Annihilate!");
         return true;
     }
+
+ */
+public boolean checkOpponentNone(PlayerColor currentPlayer) {
+    for (int i = 0; i < 9; i++) {
+        for (int j = 0; j < 7; j++) {
+            ChessboardPoint point = new ChessboardPoint(i, j);
+            if (getChessPieceAt(point) != null && getChessPieceAt(point).getOwner() != currentPlayer) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+    public  PlayerColor checkDensWin(){
+        if (getChessPieceAt(new ChessboardPoint(0,3))!=null){
+            return PlayerColor.RED;
+        }
+        if (getChessPieceAt(new ChessboardPoint(8,3))!=null){
+            return PlayerColor.BLUE;
+        }
+        return null;
+    }
     //这个方法接受当前玩家的颜色作为参数，然后在棋盘上检查是否还有敌方棋子，如果有则返回 false，否则返回 true。
     // 为了做到这一点，方法使用嵌套的 for 循环来遍历棋盘中的每个点，调用 getChessPieceAt(point) 方法获取该点上的棋子，并检查它的所有者是否与当前玩家相同。
     // 如果找到了敌方棋子，则返回 false，从而表示还有棋子；
@@ -420,54 +442,17 @@ public class Chessboard {
         return availablePoints;
     }
 
-    public List<ChessboardPoint> getValidPoints(PlayerColor color){
-        List<ChessboardPoint> availablePoints = new ArrayList<>();
-        for (int i = 0; i < 9; i++) {
-            for (int j = 0; j < 7; j++) {
-                ChessboardPoint point = new ChessboardPoint(i, j);
-                if (getChessPieceAt(point) != null && getChessPieceAt(point).getOwner() == color) {
-                    availablePoints.add(point);
-                }
-            }
-        }
-        return availablePoints;
-    }
 
-    public List<Step> getValidSteps(PlayerColor color){//获取当前玩家可用的所有合法走法，并将它们保存在一个List集合中
-        List<Step> availableSteps = new ArrayList<>();
-        List<ChessboardPoint> availablePoints = getValidPoints(color);
-        //首先，这个方法调用了getValidPoints()方法获取当前玩家可以移动的所有棋子的位置，得到一个List集合availablePoints。
-        for (ChessboardPoint point : availablePoints) {
-            List<ChessboardPoint> validMoves = getValidMoves(point);
-            //然后，对于每个可用位置，使用getValidMoves()方法获取该棋子可以移动到的所有合法位置，得到另外一个List集合validMoves。
-            for (ChessboardPoint destPoint : validMoves) {
-                availableSteps.add(recordStep(point, destPoint, color, 0));
-                //接下来，对于每个起点位置和目标位置的组合，调用recordStep()方法记录这个移动到一个新的Step对象中，并将这个Step对象添加到availableSteps集合中。
-            }
-        }
-        return availableSteps;//返回所有可用的步骤。
-    }
     public Step recordStep(ChessboardPoint fromPoint, ChessboardPoint toPoint, PlayerColor currentPlayer, int turn){
         ChessPiece fromPiece = getChessPieceAt(fromPoint);
         ChessPiece toPiece = getChessPieceAt(toPoint);
-        return new Step(fromPoint, toPoint, fromPiece, toPiece, currentPlayer, turn);
+        Step step=new Step(fromPoint, toPoint, fromPiece, toPiece, currentPlayer, turn);
+        return step;
     }
 
-    public void undoStep(Step step){
-        ChessboardPoint fromPoint = step.getFrom();
-        ChessboardPoint toPoint = step.getTo();
-        ChessPiece fromPiece = step.getFromChessPiece();
-        ChessPiece toPiece = step.getToChessPiece();
-        setChessPiece(toPoint, toPiece);
-        setChessPiece(fromPoint, fromPiece);
-    }
 
-    public void runStep(Step step){
-        ChessboardPoint fromPoint = step.getFrom();
-        ChessboardPoint toPoint = step.getTo();
-        ChessPiece fromPiece = step.getFromChessPiece();
-        setChessPiece(fromPoint, null);
-        setChessPiece(toPoint, fromPiece);
-    }
+
+
+
 
 }

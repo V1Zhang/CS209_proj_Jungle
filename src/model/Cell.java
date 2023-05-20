@@ -31,8 +31,6 @@ public class Cell implements Serializable {
     public void setType(GridType type){
         this.type=type;
     }
-
-
     public void removePiece() {
         this.piece = null;
     }

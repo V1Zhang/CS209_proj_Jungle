@@ -1,5 +1,7 @@
 package view;
 
+import model.ChessboardPoint;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -30,4 +32,6 @@ public class CellComponent extends JPanel {
     public void setValidMove(boolean validMove) {
         this.validMove = validMove;
     }
+
+
 }

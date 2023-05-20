@@ -1,16 +1,22 @@
 package controller;
 
 import listener.GameListener;
+
 import model.*;
 import view.*;
 import view.ChessComponent.AnimalChessComponent;
 
 import javax.swing.*;
-import java.awt.*;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
+
+import static model.Chessboard.*;
+import static view.ChessboardComponent.getGridComponentAt;
 
 /**
  * Controller is the connection between model and view,
@@ -20,55 +26,58 @@ import java.util.List;
  *
  */
 public class GameController implements GameListener {
+    private ChessGameFrame frame;
     private Chessboard model;
     private ChessboardComponent view;
-    private PlayerColor currentPlayer;
+    private PlayerColor currentPlayer = PlayerColor.BLUE;
     // Record whether there is a selected piece before
     private ChessboardPoint selectedPoint;
     private int turnCount = 1;
     private PlayerColor winner;
-    private List<ChessboardPoint> validMoves;
-    public GameController(ChessboardComponent view, Chessboard model) {
+    private List<ChessboardPoint> validMoves = new ArrayList<>();
+    private Stack<ChessboardPoint> stack_point_before;
+    private Stack<ChessboardPoint> stack_point_after;
+    private Stack<ChessPiece> eaten;
+    private AnimalChessComponent temp_eat = null;
+    private AnimalChessComponent temp_eaten = null;
+    private ChessPiece temp_model_eat = null;
+    private ChessPiece temp_model_eaten = null;
+    ChessPiece temp = null;
+    ChessboardPoint chessPoint_before = null;
+    ChessboardPoint chessPoint_after = null;
+    public GameController(ChessboardComponent view, Chessboard model,ChessGameFrame frame) {
         this.view = view;
         this.model = model;
-        this.currentPlayer = PlayerColor.BLUE;
-        validMoves = new ArrayList<>();
+        this.frame = frame;
         view.registerController(this);
-        initialize();
         view.initiateChessComponent(model);
         view.repaint();
-    }
-
-
-    private void initialize() {
-        for (int i = 0; i < Constant.CHESSBOARD_ROW_SIZE.getNum(); i++) {
-            for (int j = 0; j < Constant.CHESSBOARD_COL_SIZE.getNum(); j++) {
-            }
-        }
+        this.stack_point_before = new Stack<ChessboardPoint>();
+        this.stack_point_after = new Stack<ChessboardPoint>();
+        this.eaten = new Stack<>();
     }
 
     // after a valid move swap the player
     private void swapColor() {
         currentPlayer = currentPlayer == PlayerColor.BLUE ? PlayerColor.RED : PlayerColor.BLUE;
+        frame.getCurrentPlayerLabel().setText(String.format("%s's Turn", currentPlayer.toString()));;
     }
 
-    private void win(){//吃光对方所有棋子或进入对方兽穴-取胜
-        if(model.checkAnnihilate(currentPlayer)==true) {
+    private void checkWin(){//吃光对方所有棋子或进入对方兽穴-取胜
+        if(model.checkOpponentNone(currentPlayer)){
             winner = currentPlayer;
-        } else if (view.getGridComponentAt(new ChessboardPoint(0,3)) != null) {
+            System.out.println("The winner is:"+winner);
+            JOptionPane.showMessageDialog(null, "The winner is:"+currentPlayer,"Winner:",1);
+        } else if (model.checkDensWin()== PlayerColor.RED) {
             winner = PlayerColor.RED;
-        } else if (view.getGridComponentAt(new ChessboardPoint(8,3)) != null) {
-            winner = PlayerColor.BLUE;
-        }
-        System.out.println("The winner is:"+winner);
+            System.out.println("The winner is:"+winner);
             JOptionPane.showMessageDialog(null, "The winner is:RED","Winner:",1);
-
+        } else if (model.checkDensWin() ==PlayerColor.BLUE) {
+            winner = PlayerColor.BLUE;
+            System.out.println("The winner is:"+winner);
+            JOptionPane.showMessageDialog(null, "The winner is:BLUE","Winner:",1);
+        }
     }
-
-
-
-
-
 
     public void showValidMoves(ChessboardPoint point) {
         validMoves = model.getValidMoves(point);
@@ -79,11 +88,6 @@ public class GameController implements GameListener {
     // 接下来，它调用视图层的 showValidMoves(validMoves) 方法，将可移动位置传递给视图层，
     // 让视图层根据这些位置来更新棋盘的显示。
 
-    public void hideValidMoves() {
-        view.hideValidMoves(validMoves);
-    }//hideValidMoves() 方法则相反，它调用视图层的 hideValidMoves(validMoves) 方法，让视图层隐藏之前展示的可移动位置。
-
-
 
     // click an empty cell
     @Override
@@ -92,28 +96,31 @@ public class GameController implements GameListener {
         // 如果当前是移动棋子的状态，那么需要调用 model.movePiece(selectedPiece, point) 方法来移动选中的棋子。
         // 同时，无论何时，该方法都需要调用 showValidMoves(point) 方法来让视图层展示当前棋子的可移动位置。
         if (selectedPoint != null && model.isValidMove(selectedPoint, point)) {
-            hideValidMoves();
-            Step step = model.recordStep(selectedPoint, point, currentPlayer, turnCount);
-            //stepList.add(step);
-            model.solveTrap(selectedPoint,point);
+            stack_point_before.push(selectedPoint);
+            stack_point_after.push(point);
+            temp_eat = view.getAnimalChessComponent(stack_point_before.pop());
+            stack_point_before.push(selectedPoint);
+            eaten.push(temp_model_eaten);
+
             model.moveChessPiece(selectedPoint, point);
             view.setChessComponentAtGrid(point, view.removeChessComponentAtGrid(selectedPoint));
 
-            if (model.solveDens(point)){
 
-            }
-            selectedPoint = null;
-            swapColor();
-            view.repaint();
-            turnCount++;
             // TODO: if the chess enter Dens or Traps and so on
+            model.solveTrap(selectedPoint,point);
+
+            view.repaint();
+            //无论是否进入den 都要checkWin() 故不特殊判断
+            checkWin();
+            turnCount++;
+            frame.getRoundNumLabel().setText(String.format("Round Number: %d",turnCount));
+            swapColor();
+            selectedPoint = null;
+
         }
 
     }
-
-
-    // click a cell with a chess
-    //这段代码是一个 ChessComponent 的事件处理方法，处理某个玩家点击棋盘上的棋子时的行为。
+    // click an objective cell with a chess
     @Override
     public void onPlayerClickChessPiece(ChessboardPoint point, AnimalChessComponent component) {
         if (selectedPoint == null) {
@@ -126,7 +133,6 @@ public class GameController implements GameListener {
 
             }
         } else if (selectedPoint.equals(point)) {
-
             //如果之前已经选中了一个棋子，且当前点击的棋子位置和该棋子位置相同，则将所有可落子位置隐藏，取消选中状态。
             selectedPoint = null;
             component.setSelected(false);
@@ -137,13 +143,31 @@ public class GameController implements GameListener {
             // 则判断是否符合规则调用 model.isValidCapture() 方法进行判断。
             // 如果不符合规则则打印提示信息并返回，否则执行下面的逻辑。
             if (model.isValidCapture(selectedPoint,point)){
+
+                stack_point_before.push(selectedPoint);
+                stack_point_after.push(point);
+
+                temp_model_eat = model.getChessPieceAt(selectedPoint);
+                temp_model_eaten = model.getChessPieceAt(point);
+                eaten.push(temp_model_eaten);
+
+                temp_eat = view.getAnimalChessComponent(stack_point_before.pop());
+                temp_eaten = view.getAnimalChessComponent(stack_point_after.pop());
+                //得到两个位置对应的棋子 因为调用了pop所以再重新push一次
+                stack_point_before.push(selectedPoint);
+                stack_point_after.push(point);
+
                 model.captureChessPiece(selectedPoint, point);
                 view.removeChessComponentAtGrid(point);
                 view.setChessComponentAtGrid(point, view.removeChessComponentAtGrid(selectedPoint));
-                selectedPoint = null;
+
                 view.repaint();
-                win();
-            }
+                turnCount++;
+                frame.getRoundNumLabel().setText(String.format("Round Number: %d",turnCount));
+                swapColor();
+                checkWin();
+                selectedPoint = null;
+                }
             else{
                 System.out.println("Illegal chess capture!");
             }
@@ -157,56 +181,53 @@ public class GameController implements GameListener {
         // 如果 isValidCapture() 返回 false，将会执行打印语句和 return 语句，否则直接执行下面的代码。
         // 同时，被注释掉的 throw 语句表示如果判断为非法落子或移动，将会抛出一个 IllegalArgumentException 异常。
         // TODO: Implement capture function
-
-
-
-
     }
 
+    public void setCurrentPlayer(PlayerColor currentPlayer) {
+        this.currentPlayer = currentPlayer;
+    }
+    public PlayerColor getCurrentPlayer() {
+        return currentPlayer;
+    }
+    public int getTurnCount() {
+        return turnCount;
+    }
 
+    public void swap(){
+        chessPoint_before = stack_point_before.pop();
+        chessPoint_after = stack_point_after.pop();
+        //为了实现坐标交换，需要有一个中间值temp
+        temp = temp_model_eat;
+        setChessPiece(chessPoint_after,temp_model_eaten);
+        setChessPiece(chessPoint_before,temp);
+    }
 
+       public void undo() {
+           //利用栈实现后进先出-撤销操作
+           if (stack_point_after.size() == 0) {
+               System.out.println("Can't undo");
+           } else {
+               if (eaten.pop() != null) {
+                   System.out.println();
+                   swap();
+                   view.setChessComponentAtGrid(chessPoint_after, temp_eaten);
+                   view.setChessComponentAtGrid(chessPoint_before, temp_eat);
+               }
+               else {
+                   ChessboardPoint chessPoint_before = stack_point_before.pop();
+                   ChessboardPoint chessPoint_after = stack_point_after.pop();
+                   System.out.printf("Undo from (%d,%d) to (%d,%d), chess name=%s\n",chessPoint_after.getRow(),chessPoint_after.getCol(),
+                           chessPoint_before.getRow(),chessPoint_before.getCol(),getChessPieceAt(chessPoint_after).getName());
+                   model.moveChessPiece(chessPoint_after, chessPoint_before);
+                   view.setChessComponentAtGrid(chessPoint_before, view.removeChessComponentAtGrid(chessPoint_after));
+                   }
+                    turnCount--;
+                    frame.getRoundNumLabel().setText(String.format("Round Number: %d",turnCount));
+                    swapColor();
+                    view.repaint();
+               }
+           }
 
-
-
-        public void restart(){
-
-            model.initPieces();
-            view.initiateGridComponents();
-            view.initiateChessComponent(model);
-            view.repaint();
-            currentPlayer = PlayerColor.BLUE;
-            winner = null;
-            selectedPoint = null;
-            turnCount = 1;
-            //stepList.clear();
-            validMoves.clear();
-            //view.getChessGameFrame().updateStatus("");
-
-        }
-       public void undo(){
-  /*     if (stepList.isEmpty()) {
-            return;
-        }
-            Step step = stepList.remove(stepList.size() - 1);
-            model.undoStep(step);
-            view.undoStep(step);
-            view.repaint();
-            swapColor(true);
-            if (gameMode == GameMode.AI_1 || gameMode == GameMode.AI_2 || gameMode ==  gameMode.AI_3 ) {
-                step = stepList.remove(stepList.size() - 1);
-                model.undoStep(step);
-                view.undoStep(step);
-                view.repaint();
-                swapColor(true);
-            }
-
-   */
-
-
-
-
-
-        }
         public void load() {
             JFileChooser chooser = new JFileChooser();
             //FileNameExtensionFilter filter = new FileNameExtensionFilter("PDF & DOC & TXT Images", "pdf", "doc", "txt");
@@ -220,23 +241,31 @@ public class GameController implements GameListener {
                 String path = chooser.getSelectedFile().getPath();
                 System.out.println("You chose to open this file: " +  chooser.getSelectedFile().getName());
                 File file = new File(path);
-                try {
-                    Desktop.getDesktop().open(file);
+                try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(file))){
+                    List<Step> stepList = (List<Step>) inputStream.readObject();
+                    for(Step step : stepList){
+                        //model.runStep(step);
+                        //view.runStep(step);
+                        view.repaint();
+                        try{
+                            Thread.sleep(259);
+                            view.paintImmediately(0,0,view.getWidth(),view.getHeight());
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                    //Desktop.getDesktop().open(file);
                 }catch(IOException e){
                     e.printStackTrace();
+                } catch (ClassNotFoundException e) {
+                    throw new RuntimeException(e);
                 }
             }
         }
-        public void save(){
+        public void save() {
             JFileChooser chooser = new JFileChooser();
             int returnVal = chooser.showOpenDialog(null);
-
         }
-    public PlayerColor getCurrentPlayer() {
-        return currentPlayer;
-    }
-    public int getTurnCount() {
-        return turnCount;
-    }
 }
+
 

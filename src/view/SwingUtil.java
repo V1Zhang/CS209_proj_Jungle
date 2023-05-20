@@ -4,12 +4,13 @@ import java.awt.Image;
 import java.awt.Graphics;
 import java.awt.Dimension;
 import javax.swing.ImageIcon;
-
-/**Title: SwingUtil.java
+/*
+借鉴+修改--实现自适应组件大小、可等比例缩放ImageIcon对象
+Title: SwingUtil.java
  * Swing工具类
- *
  * @author Run
- * @date  2019-08-20 */
+ * @date  2019-08-20
+  */
 public class SwingUtil {
 
     /**
