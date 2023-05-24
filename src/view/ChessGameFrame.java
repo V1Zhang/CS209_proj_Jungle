@@ -1,11 +1,11 @@
 package view;
 import controller.GameController;
-import model.Chessboard;
-import model.PlayerColor;
+import model.*;
+import view.ChessComponent.*;
 
 import javax.swing.*;
 import java.awt.*;
-
+import java.io.*;
 
 
 
@@ -102,8 +102,6 @@ public class ChessGameFrame extends JFrame {
     private void addStartButton() {
         ImageIcon img = createAutoAdjustIcon("src/images/restart.jpg", true);
         JButton button = new JButton(img);
-        //button.setContentAreaFilled(false);
-        button.setBorder(null);
         button.setLocation(HEIGTH, HEIGTH / 10 + 120);
         button.setSize(170, 60);
         button.setFont(new Font("Rockwell", Font.BOLD, 20));
@@ -126,7 +124,6 @@ public class ChessGameFrame extends JFrame {
     private void setUndoButton(){
         ImageIcon img = createAutoAdjustIcon("src/images/undo.jpg", true);
         UndoButton = new JButton(img);
-        UndoButton.setBorder(null);
         UndoButton.setLocation(HEIGTH, HEIGTH / 10 + 200);
         UndoButton.setSize(170, 60);
         UndoButton.setFont(new Font("Rockwell", Font.BOLD, 20));
@@ -143,7 +140,6 @@ public class ChessGameFrame extends JFrame {
     private void addSettingButton(){
         ImageIcon img = createAutoAdjustIcon("src/images/setting.jpg", true);
         JButton button = new JButton(img);
-        button.setBorder(null);
         button.setLocation(HEIGTH, HEIGTH / 10 + 280);
         button.setSize(170, 60);
         button.setFont(new Font("Rockwell", Font.BOLD, 20));
@@ -157,7 +153,6 @@ public class ChessGameFrame extends JFrame {
     private void addHelpButton(){
         ImageIcon img = createAutoAdjustIcon("src/images/help.jpg", true);
         JButton button = new JButton(img);
-        button.setBorder(null);
         button.setLocation(HEIGTH, HEIGTH / 10 + 360);
         button.setSize(170, 60);
         button.setFont(new Font("Rockwell", Font.BOLD, 20));
@@ -186,9 +181,97 @@ public class ChessGameFrame extends JFrame {
         this.getLayeredPane().add(button, JLayeredPane.MODAL_LAYER);
         button.addActionListener(e -> {
             System.out.println("Click load");
-            chessboardComponent.getGameController().load();
+            JFileChooser chooser = new JFileChooser();
+            //FileNameExtensionFilter filter = new FileNameExtensionFilter("PDF & DOC & TXT Images", "pdf", "doc", "txt");
+            //chooser.setFileFilter(filter);
+            int returnVal = chooser.showOpenDialog(this);
+            //Component参数:父参数决定了两件事:打开对话框所依赖的框架和放置对话框时应考虑其外观位置的组件。
+            // 如果父对象是一个框架对象(例如JFrame)，那么该对话框取决于框架和外观，对话框相对于框架的位置(例如，以框架为中心)。
+            // 如果父元素是一个组件，那么对话框取决于包含该组件的框架，并且相对于该组件定位(例如，以组件为中心)。如果父窗口为空，则对话框依赖于没有可见窗口，并且它被放置在外观和感觉相关的位置，例如屏幕的中心。
+            // parent参数：null———当前电脑显示器屏幕的中央。this———当前你编写的程序屏幕中央.如果是你其他的按钮名称就是以这个按钮为中心，弹出的文件选择器。
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+            File file = chooser.getSelectedFile();
+            String path = file.getPath();
+            String name = file.getName();
+            String extension = name.substring(file.getName().lastIndexOf(".")+1).toLowerCase();
+            if (extension.equals("txt")) {
+                System.out.println("You chose to open this file: " + name);
+                int line = 0;
+                String content = "";
+                boolean readable = true;
+                boolean chessError = false;
+                try {
+                    //ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(file))
+                    // InputStream是表示字节输入流的所有类的超类,提供的是字节流的读取,而非文本读取；
+                    // Reader是用于读取字符流的抽象类，即用Reader读取出来的是char数组或者String ，使用InputStream读取出来的是byte数组。
+                    FileReader fileReader = new FileReader(file);
+                    BufferedReader reader = new BufferedReader(fileReader);
+                    while ((content = reader.readLine()) != null) {
+                        String[] strings = content.split(",");
+                        //根据不同的行数处理不同的异常
+                        if (line == 0) {
+                            if (content.equals("B") && content.equals("R")) { //未提供下一步行棋方 错误编码104
+                                JOptionPane.showMessageDialog(this, "Error 104: No Current Player Message", "Error", 1);
+                                readable = false;
+                                break;
+                            }
+                        }
+                        if (line >= 2 && line < 11) { // 2-10行为棋盘
+                            if (strings.length != 7) { //列数不为7 错误编码102
+                                JOptionPane.showMessageDialog(this, "Error 102: Not 9*7 Chessboard-COL","Error", 1);
+                                readable = false;
+                                break;
+                            }
+                        }
+                        if (line == 12) {
+                            if (strings.length == 7) { //行数不为9 错误编码102
+                                JOptionPane.showMessageDialog(this, "Error 102: Not 9*7 Chessboard-ROW", "Error", 1);
+                                readable = false;
+                                break;
+                            }
+                        }
+                        if(line >= 2 && line < 11) {
+                            String[] component_str = content.split(",");
+                            for (String str : component_str) {
+                                String[] standardstr = {"R1", "R2", "R3", "R4", "R5", "R5", "R6", "R7", "R8", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "0"};
+                                    for(int j=0;j < standardstr.length;j++) {
+                                        if (str.equals(standardstr[j])) {
+                                            chessError=true;
+                                        }
+                                    }
+                            }
+                            if (chessError==false) { //棋子错误 错误编码101
+                                JOptionPane.showMessageDialog(this, "Error 101: Wrong Chess Component", "Error", 1);
+                                readable = false;
+                                break;
+                            }
+                        }
+                        line++;
+                    }
+                    if (readable == true) {
+                        FileReader fileReader_again = new FileReader(file);
+                        BufferedReader reader_again = new BufferedReader(fileReader_again);
+                        chessboardComponent.getGameController().load(reader_again);
+                    }
+                } catch (FileNotFoundException ex) {
+                    throw new RuntimeException(ex);
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
+
+            } else { //文件格式错误处理 错误编码101
+                JOptionPane.showMessageDialog(this, "Error 101: File Extension Error", "Error", 1);
+            }
+
+
+
+
+
+            }
         });
     }
+
+    
     private void addSaveButton(){
         ImageIcon img = createAutoAdjustIcon("src/images/save.jpg", true);
         JButton button = new JButton(img);

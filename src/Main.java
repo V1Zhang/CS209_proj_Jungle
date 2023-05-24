@@ -10,7 +10,6 @@ public class Main {
         SwingUtilities.invokeLater(() -> {
             MusicPlayer musicPlayer = new MusicPlayer();
             ChessGameFrame mainFrame = new ChessGameFrame(1100, 810, musicPlayer);
-            //GameController gameController = new GameController(mainFrame.getChessboardComponent(), new Chessboard());
             mainFrame.setVisible(true);
         });
     }

@@ -2,14 +2,13 @@ package model;
 
 import java.io.Serializable;
 //表示一步完整的棋子移动，包括移动前后的位置、移动前后的棋子、当前玩家颜色和这是第几个回合
-public class Step implements Serializable, Comparable<Step> {
+public class Step {
 
     private ChessboardPoint from;
     private ChessboardPoint to;
     private ChessPiece fromChessPiece;
     private ChessPiece toChessPiece;
     private PlayerColor currentPlayer;
-    private transient int value;
     private int turnCount;
 
     public Step(ChessboardPoint from, ChessboardPoint to, ChessPiece fromChessPiece, ChessPiece toChessPiece, PlayerColor currentPlayer, int turnCount) {
@@ -68,14 +67,6 @@ public class Step implements Serializable, Comparable<Step> {
         this.turnCount = turnCount;
     }
 
-    public int getValue() {
-        return value;
-    }
-
-    public void setValue(int value) {
-        this.value = value;
-    }
-
     @Override
     public String toString() {
         return "Step{" +
@@ -83,12 +74,8 @@ public class Step implements Serializable, Comparable<Step> {
                 ", to=" + to +
                 ", fromChessPiece=" + fromChessPiece +
                 ", toChessPiece=" + toChessPiece +
-                ", value=" + value +
-                '}';
-    }
-
-    @Override
-    public int compareTo(Step step) {
-        return step.getValue() - this.getValue();
+                "current player is "+ currentPlayer+
+                "turn count is "+turnCount+
+                "}";
     }
 }

@@ -1,5 +1,6 @@
 package view;
 
+import model.Cell;
 import model.ChessboardPoint;
 
 import javax.swing.*;

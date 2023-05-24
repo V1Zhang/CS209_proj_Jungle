@@ -38,7 +38,6 @@ public class Cell implements Serializable {
     public PlayerColor getOwner() {
         return owner;
     }
-
     public void setOwner(PlayerColor owner) {
         this.owner = owner;
     }

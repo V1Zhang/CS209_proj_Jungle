@@ -6,10 +6,13 @@ import view.ChessComponent.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
+import java.util.ConcurrentModificationException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.List;
 
+import static model.Chessboard.getChessPieceAt;
+import static model.Chessboard.getGridAt;
 import static model.Constant.CHESSBOARD_COL_SIZE;
 import static model.Constant.CHESSBOARD_ROW_SIZE;
 import static view.SwingUtil.createAutoAdjustIcon;
@@ -23,8 +26,17 @@ public class ChessboardComponent extends JComponent {
     private final Set<ChessboardPoint> riverCell = new HashSet<>();
     private final Set<ChessboardPoint> trapCell = new HashSet<>();
     private final Set<ChessboardPoint> denCell = new HashSet<>();
+    public static final Color light_green = new Color(160, 222, 153);
+    public static final Color LIGHT_GREEN = light_green;
+    public static final Color brown = new Color(61,6,3);
+    public static final Color BROWN = brown;
+    public static final Color light_blue = new Color(147,209,240);
+    public static final Color Light_BLUE = light_blue;
 
-
+    /**
+     * The color dark gray.  In the default sRGB space.
+     * @since 1.4
+     */
     public GameController gameController;
 
     public ChessboardComponent(int chessSize) {
@@ -113,13 +125,13 @@ public class ChessboardComponent extends JComponent {
                 ChessboardPoint temp = new ChessboardPoint(i, j);
                 CellComponent cell;
                 if (riverCell.contains(temp)) {
-                    cell = new CellComponent(Color.CYAN, calculatePoint(i, j), CHESS_SIZE);
+                    cell = new CellComponent(Light_BLUE, calculatePoint(i, j), CHESS_SIZE);
                     this.add(cell);
                 } else if (trapCell.contains(temp)) {
-                    cell = new CellComponent(Color.DARK_GRAY,calculatePoint(i,j),CHESS_SIZE);
+                    cell = new CellComponent(LIGHT_GREEN,calculatePoint(i,j),CHESS_SIZE);
                     this.add(cell);
                 }else if (denCell.contains((temp))) {
-                    cell = new CellComponent(Color.BLACK,calculatePoint(i,j),CHESS_SIZE);
+                    cell = new CellComponent(BROWN,calculatePoint(i,j),CHESS_SIZE);
                     this.add(cell);
                 }  else {
                     cell = new CellComponent(Color.LIGHT_GRAY, calculatePoint(i, j), CHESS_SIZE);
@@ -138,13 +150,17 @@ public class ChessboardComponent extends JComponent {
         getGridComponentAt(point).add(chess);
     }
 
-    public static AnimalChessComponent removeChessComponentAtGrid(ChessboardPoint point) {
+    public static AnimalChessComponent removeChessComponentAtGrid(ChessboardPoint point) throws ArrayIndexOutOfBoundsException{
         // Note re-validation is required after remove / removeAll.
-        AnimalChessComponent chess = (AnimalChessComponent) getGridComponentAt(point).getComponents()[0];
-        getGridComponentAt(point).removeAll();
-        getGridComponentAt(point).revalidate();
-        chess.setSelected(false);
-        return chess;
+        try {
+            AnimalChessComponent chess = (AnimalChessComponent) getGridComponentAt(point).getComponents()[0];
+            getGridComponentAt(point).removeAll();
+            getGridComponentAt(point).revalidate();
+            chess.setSelected(false);
+            return chess;
+        }catch (ArrayIndexOutOfBoundsException e){
+            return null;
+        }
     }
     public static AnimalChessComponent getAnimalChessComponent(ChessboardPoint point) throws ArrayIndexOutOfBoundsException{
         try {
@@ -182,19 +198,60 @@ public class ChessboardComponent extends JComponent {
                 System.out.print("None chess here and ");
                 gameController.onPlayerClickCell(getChessboardPoint(e.getPoint()), (CellComponent) clickedComponent);
             } else {
+                if(getChessPieceAt(getChessboardPoint(e.getPoint())).getOwner()==gameController.getCurrentPlayer()) {
+                    gameController.viewValidMoves(getChessboardPoint(e.getPoint()));
+                }
                 System.out.print("One chess here and ");
                 gameController.onPlayerClickChessPiece(getChessboardPoint(e.getPoint()), (AnimalChessComponent) clickedComponent.getComponents()[0]);
             }
         }
     }
 
+
     public void showValidMoves(List<ChessboardPoint> validMoves) {
         for (ChessboardPoint validMove : validMoves) {
-            CellComponent cellComponent = getGridComponentAt(validMove);
-            cellComponent.setValidMove(true);
-            paintImmediately(this.getBounds());
+
+            Graphics2D g2d = (Graphics2D) getGridComponentAt(validMove).getGraphics();
+            g2d.setColor(Color.WHITE);
+            g2d.setStroke(new BasicStroke(5.0f));
+            int radius = 30; // 设置圆形半径
+            int centerX = getGridComponentAt(validMove).getWidth() / 2; //计算中心点x坐标
+            int centerY = getGridComponentAt(validMove).getHeight() / 2; //计算中心点y坐标
+            g2d.translate(centerX, centerY);
+            g2d.drawOval(-radius / 2, -radius / 2, radius, radius);
         }
     }
+/*
+    public void showValidMoves(List<ChessboardPoint> validMoves) {
+        for (ChessboardPoint validMove : validMoves) {
+            CellComponent cellComponent = new CellComponent(Light_PINK, calculatePoint(validMove.getRow(), validMove.getCol()), CHESS_SIZE);
+            this.add(cellComponent);
+            gridComponents[validMove.getRow()][validMove.getCol()] = cellComponent;
+            //CellComponent cellComponent = getGridComponentAt(validMove);
+            cellComponent.setValidMove(true);
+            paintImmediately(this.getBounds());
+            repaint();
+        }
+    }
+
+ */
+
+
+    public void hideValidMoves(List<ChessboardPoint> validMoves) throws ConcurrentModificationException {
+        //多线程并发修改异常
+        try {
+            for (ChessboardPoint validMove : validMoves) {
+                CellComponent cellComponent = getGridComponentAt(validMove);
+                cellComponent.setValidMove(false);
+                validMoves.clear();
+//            System.out.println("hide valid move" + validMove);
+            }
+        }catch (ConcurrentModificationException e){
+        }
+
+    }
+
+
 
     public void setGameController(GameController gameController) {
         this.gameController = gameController;

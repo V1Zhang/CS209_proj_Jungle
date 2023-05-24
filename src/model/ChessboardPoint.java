@@ -62,9 +62,12 @@ public class ChessboardPoint {
         ChessboardPoint temp = (ChessboardPoint) obj;
         return (temp.getRow() == this.row) && (temp.getCol() == this.col);
     }
+    public ChessboardPoint list_str (ChessboardPoint point){
+        return point;
+    }
     @Override
     public String toString() {
-        return "("+row + ","+col+") " + "on the chessboard is clicked!";
+        return "("+row + ","+col+")";
     }
 
 }

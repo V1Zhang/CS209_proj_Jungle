@@ -1,7 +1,18 @@
 package controller;
 
+
 public class AI {
+    public static boolean mode;
+    public static void startAIMode(){
+        mode=true;
+    }
+    public static void quitAIMode(){
+        mode=false;
+    }
+}
 /*
+public class AI {
+
         private static final int MAX_DEPTH = 4; // 最大搜索深度
         private static final int INF = 1000000; // 极大值（赢局状态）
         private static final int N_INF = -INF; // 极小值（输局状态）
@@ -113,6 +124,7 @@ public class AI {
                 board[fromX][fromY] = rat;
             }
         }
+}
 
      */
-}
+

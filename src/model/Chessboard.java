@@ -19,7 +19,6 @@ public class Chessboard {
     private final Set<ChessboardPoint> riverCell = new HashSet<>();
     private final Set<ChessboardPoint> trapCell = new HashSet<>();
     private final Set<ChessboardPoint> denCell = new HashSet<>();
-    public static ChessboardComponent chessboardComponent;
 
     public Chessboard() {
         this.grid =
@@ -75,17 +74,6 @@ public class Chessboard {
         }
     }
 
-    public static void removeAllChess() {
-        for (int i = 0; i < Constant.CHESSBOARD_ROW_SIZE.getNum(); i++) {
-            for (int j = 0; j < Constant.CHESSBOARD_COL_SIZE.getNum(); j++) {
-                grid[i][j].removePiece();
-                removeChessComponentAtGrid(new ChessboardPoint(i,j));
-
-            }
-        }
-    }
-
-
     public void initPieces() {
         grid[2][6].setPiece(new ChessPiece(PlayerColor.BLUE, "Elephant",8));
         grid[6][0].setPiece(new ChessPiece(PlayerColor.RED, "Elephant",8));
@@ -110,7 +98,7 @@ public class Chessboard {
         return getGridAt(point).getPiece();
     }
 
-    private static Cell getGridAt(ChessboardPoint point) {
+    public static Cell getGridAt(ChessboardPoint point) {
         return grid[point.getRow()][point.getCol()];
     }
 
@@ -216,10 +204,16 @@ public class Chessboard {
             }
         }
         // 不能走到自己的巢穴里
-        if (getGridAt(dest).getType() == GridType.DENS && getGridAt(dest).getOwner() == getChessPieceAt(src).getOwner()) {
+        if (getGridAt(dest).getType() == GridType.DENS && getChessPieceAt(src).getOwner()==PlayerColor.RED&&dest.getRow()==8&&dest.getCol()==3) {
+            //System.out.println("Attention! You cannot enter your own den!");
+            return false;
+        }
+        if (getGridAt(dest).getType() == GridType.DENS && getChessPieceAt(src).getOwner()==PlayerColor.BLUE&&dest.getRow()==0&&dest.getCol()==3) {
+            //System.out.println("Attention! You cannot enter your own den!");
             return false;
         }
 
+        solveTrap(src, dest);
         return calculateDistance(src, dest) == 1;
     }
 
@@ -305,15 +299,27 @@ public class Chessboard {
     //  这段代码可能是实现一个围住对方棋子的功能，将对方棋子的等级降为0表示将其困住。
 
     public void solveTrap(ChessboardPoint selectedPoint, ChessboardPoint destPoint) {
-        if (getGridAt(destPoint).getType() == GridType.TRAP && getGridAt(destPoint).getOwner() != getChessPieceAt(selectedPoint).getOwner()) {
-            getTrapped(selectedPoint);  //进入陷阱
-        } else if (getGridAt(selectedPoint).getType() == GridType.TRAP && getGridAt(selectedPoint).getOwner() != getChessPieceAt(selectedPoint).getOwner()) {
-            exitTrap(selectedPoint);  //逃出陷阱
+        if (getGridAt(destPoint).getType() == GridType.TRAP) {
+            if (getGridAt(destPoint) == grid[0][2] || getGridAt(destPoint) == grid[0][4] || getGridAt(destPoint) == grid[1][3]) {
+                if (getChessPieceAt(selectedPoint).getOwner() == PlayerColor.RED) {
+                    getTrapped(selectedPoint);
+                }
+            } else if (getGridAt(destPoint) == grid[8][2] || getGridAt(destPoint) == grid[8][4] || getGridAt(destPoint) == grid[7][3]) {
+                if (getChessPieceAt(selectedPoint).getOwner() == PlayerColor.BLUE) {
+                    getTrapped(selectedPoint);
+                }
+            }
+            //进入陷阱
+        } else if (getGridAt(selectedPoint).getType() == GridType.TRAP) {
+            if (getGridAt(selectedPoint) == grid[0][2] || getGridAt(selectedPoint) == grid[0][4] || getGridAt(selectedPoint) == grid[1][3]
+                    || getGridAt(selectedPoint) == grid[8][2] || getGridAt(selectedPoint) == grid[8][4] || getGridAt(selectedPoint) == grid[7][3]) {
+                exitTrap(selectedPoint);  //逃出陷阱
+            }
         }
     }
 
     public void getTrapped(ChessboardPoint point) {
-        getGridAt(point).getPiece().setRank(0);
+        getChessPieceAt(point).setRank(0);
     }
 
     public void exitTrap(ChessboardPoint point) {
@@ -428,7 +434,7 @@ public boolean checkOpponentNone(PlayerColor currentPlayer) {
 
 
     //如果检测到可以走或可以吃，则将该位置保存到一个List集合availablePoints中，最后将所有可用的位置返回。
-    public List<ChessboardPoint> getValidMoves(ChessboardPoint point) {
+    public List<ChessboardPoint> getValidMovesList(ChessboardPoint point) {
         List<ChessboardPoint> availablePoints = new ArrayList<>();
         // 检查整张棋盘，用isValidMove()方法检查每个格子是否可以移动到，同时也用isValidCapture()方法检查每个格子是否可以吃掉
         for (int i = 0; i < 9; i++) {
