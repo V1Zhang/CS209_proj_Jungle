@@ -8,9 +8,6 @@ import view.ChessComponent.*;
 
 import javax.swing.*;
 import java.io.*;
-import java.nio.Buffer;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -38,14 +35,12 @@ public class GameController implements GameListener {
     private int turnCount = 1;
     private PlayerColor winner;
     private List<ChessboardPoint> validMoves = new ArrayList<>();
-    private Stack<ChessboardPoint> stack_point_before;
-    private Stack<ChessboardPoint> stack_point_after;
-    private Stack<ChessPiece> eaten;
-    private AnimalChessComponent temp_eat = null;
-    private AnimalChessComponent temp_eaten = null;
-    private ChessPiece temp_model_eat = null;
-    private ChessPiece temp_model_eaten = null;
-    ChessPiece temp = null;
+    private Stack<ChessboardPoint> stack_point_before;// record every previous step's chessboardPoint
+    private Stack<ChessboardPoint> stack_point_after;// record every next step's chessboardPoint
+    private Stack<ChessPiece> eat;// record every previous step's chessboardPiece
+    private Stack<ChessPiece> eaten;// record every next step's chessboardPoint
+    private Stack<AnimalChessComponent> eaten_animal;// record every eaten animal
+    private Stack<AnimalChessComponent> eat_animal;// record every eat animal
     ChessboardPoint chessPoint_before = null;
     ChessboardPoint chessPoint_after = null;
     private List<Step> stepList = new ArrayList<>();
@@ -62,9 +57,12 @@ public class GameController implements GameListener {
         this.stack_point_before = new Stack<ChessboardPoint>();
         this.stack_point_after = new Stack<ChessboardPoint>();
         this.eaten = new Stack<>();
+        this.eat = new Stack<>();
+        this.eat_animal = new Stack<>();
+        this.eaten_animal = new Stack<>();
     }
 
-    // after a valid move swap the player
+        // after a valid move swap the player
     private void swapColor() {
         currentPlayer = currentPlayer == PlayerColor.BLUE ? PlayerColor.RED : PlayerColor.BLUE;
         frame.getCurrentPlayerLabel().setText(String.format("%s's Turn", currentPlayer.toString()));
@@ -113,11 +111,13 @@ public class GameController implements GameListener {
         if (selectedPoint != null && model.isValidMove(selectedPoint, point)) {
             hideValidMoves();
 
+            // record the process of changing chessboardPoint and chessPiece
             stack_point_before.push(selectedPoint);
             stack_point_after.push(point);
-            temp_eat = view.getAnimalChessComponent(stack_point_before.pop());
-            stack_point_before.push(selectedPoint);
-            eaten.push(temp_model_eaten);
+            ChessPiece temp_eat = model.getChessPieceAt(stack_point_before.peek());
+            ChessPiece temp_eaten = model.getChessPieceAt(stack_point_after.peek()); //push进去null
+            eat.push(temp_eat);
+            eaten.push(temp_eaten);
 
             stepList.add(model.recordStep(selectedPoint, point, currentPlayer, turnCount));
             step = new Step(selectedPoint, point, getChessPieceAt(selectedPoint), null, currentPlayer, turnCount);
@@ -136,7 +136,6 @@ public class GameController implements GameListener {
             swapColor();
             selectedPoint = null;
         }
-
     }
 
     // click an objective cell with a chess
@@ -147,17 +146,19 @@ public class GameController implements GameListener {
             // 如果是，则将该棋子设为选中状态，并调用 showValidMoves() 方法展示可行的落子位置。
             if (model.getChessPieceOwner(point).equals(currentPlayer)) {
                 selectedPoint = point;
-                //viewValidMoves(selectedPoint);
+                viewValidMoves(selectedPoint);
                 component.setSelected(true);
                 component.repaint();
 
             }
         } else if (selectedPoint.equals(point)) {
-           // hideValidMoves();
             //如果之前已经选中了一个棋子，且当前点击的棋子位置和该棋子位置相同，则将所有可落子位置隐藏，取消选中状态。
             selectedPoint = null;
             component.setSelected(false);
+            hideValidMoves();
             component.repaint();
+            view.repaint();
+
             //在这段代码中，使用了 model.getChessPieceOwner() 方法获取指定棋子的所有者，并将其与 currentPlayer 进行比较，以判断棋子是否属于当前玩家。
             //注释掉的 throw 语句表示如果判断为非法落子或移动，将会抛出一个 IllegalArgumentException 异常。
         } else {//    如果之前已经选中一个棋子，且当前点击的棋子位置和该棋子位置不同，
@@ -167,18 +168,17 @@ public class GameController implements GameListener {
                 stack_point_before.push(selectedPoint);
                 stack_point_after.push(point);
 
-                temp_model_eat = model.getChessPieceAt(selectedPoint);
-                temp_model_eaten = model.getChessPieceAt(point);
-                eaten.push(temp_model_eaten);
-
-                temp_eat = view.getAnimalChessComponent(stack_point_before.pop());
-                temp_eaten = view.getAnimalChessComponent(stack_point_after.pop());
-                //得到两个位置对应的棋子 因为调用了pop所以再重新push一次
-                stack_point_before.push(selectedPoint);
-                stack_point_after.push(point);
+                AnimalChessComponent temp_animal_eat = view.getAnimalChessComponent(stack_point_before.peek());
+                AnimalChessComponent temp_animal_eaten = view.getAnimalChessComponent(stack_point_after.peek());
+                eat_animal.push(temp_animal_eat);
+                eaten_animal.push(temp_animal_eaten);
+                ChessPiece temp_eat = model.getChessPieceAt(stack_point_before.peek());
+                ChessPiece temp_eaten = model.getChessPieceAt(stack_point_after.peek());
+                eat.push(temp_eat);
+                eaten.push(temp_eaten);
 
                 stepList.add(model.recordStep(selectedPoint, point, currentPlayer, turnCount));
-                step = new Step(selectedPoint, point, temp_model_eat, temp_model_eaten, currentPlayer, turnCount);
+                step = new Step(selectedPoint, point, model.getChessPieceAt(stack_point_before.peek()), model.getChessPieceAt(stack_point_after.peek()), currentPlayer, turnCount);
                 stepList_str.add(step.toString());
 
                 hideValidMoves();
@@ -226,28 +226,27 @@ public class GameController implements GameListener {
         return turnCount;
     }
 
-    public void swap() {
-        chessPoint_before = stack_point_before.pop();
-        chessPoint_after = stack_point_after.pop();
-        //为了实现坐标交换，需要有一个中间值temp
-        temp = temp_model_eat;
-        setChessPiece(chessPoint_after, temp_model_eaten);
-        setChessPiece(chessPoint_before, temp);
-    }
 
     public void undo() {
         //利用栈实现后进先出-撤销操作
         if (stack_point_after.size() == 0) {
             System.out.println("Can't undo");
         } else {
-            if (eaten.pop() != null) {
-                System.out.printf("Undo from %s eat %s\n", temp_model_eat.getName(), temp_model_eaten.getName());
-                swap();
-                view.setChessComponentAtGrid(chessPoint_after, temp_eaten);
-                view.setChessComponentAtGrid(chessPoint_before, temp_eat);
+            ChessPiece chessPiece_before = eat.pop();
+            ChessPiece chessPiece_after = eaten.pop();
+            chessPoint_before = stack_point_before.pop();
+            chessPoint_after = stack_point_after.pop();
+            if (chessPiece_after != null) {
+                //if we need to change two animal grid then we should acquire animal component from eat_animal and eaten_animal stack
+                AnimalChessComponent temp_animal_eaten = eaten_animal.pop();
+                AnimalChessComponent temp_animal_eat = eat_animal.pop();
+                setChessPiece(chessPoint_before,chessPiece_before);
+                setChessPiece(chessPoint_after,chessPiece_after);
+                view.setChessComponentAtGrid(chessPoint_after, temp_animal_eaten);
+                view.setChessComponentAtGrid(chessPoint_before, temp_animal_eat);
+                System.out.printf("Undo from %s eat %s\n", temp_animal_eat.getName(), temp_animal_eaten.getName());
             } else {
-                ChessboardPoint chessPoint_before = stack_point_before.pop();
-                ChessboardPoint chessPoint_after = stack_point_after.pop();
+                //if we only need to change an animal grid and an empty grid then we implement undo through modifying the process of move
                 System.out.printf("Undo from (%d,%d) to (%d,%d), chess name=%s\n", chessPoint_after.getRow(), chessPoint_after.getCol(),
                         chessPoint_before.getRow(), chessPoint_before.getCol(), getChessPieceAt(chessPoint_after).getName());
                 model.moveChessPiece(chessPoint_after, chessPoint_before);

@@ -1,10 +1,14 @@
 package view.ChessComponent;
 
 
+import controller.GameController;
 import model.PlayerColor;
 import view.ChessComponent.AnimalChessComponent;
+import view.ChessboardComponent;
 
 import java.awt.*;
+
+import static model.ChessboardPoint.getChessboardPoint;
 
 /**
  * This is the equivalent of the ChessPiece class,
@@ -12,7 +16,6 @@ import java.awt.*;
  */
 public class ElephantChessComponent extends AnimalChessComponent {
     private PlayerColor owner;
-
     private boolean selected;
 
     public ElephantChessComponent(PlayerColor owner, int size) {
@@ -55,7 +58,7 @@ public class ElephantChessComponent extends AnimalChessComponent {
         } else if (owner==PlayerColor.BLUE){
             drawImageB(g);
         }
-        if (isSelected()) { // Highlights the model if selected.
+        if (isSelected()) {// Highlights the model if selected.
             if(owner==PlayerColor.RED) {
                 g.setColor(Color.RED);
             }
@@ -65,6 +68,15 @@ public class ElephantChessComponent extends AnimalChessComponent {
             ((Graphics2D) g).setStroke(new BasicStroke(3.0f));
             g.drawRect(0, 0, getWidth() , getHeight());
         }
+        /*else{
+            component.getGameController().hideValidMoves();
+        }
+
+         */
+    }
+
+    public boolean getIsSelect(){
+        return selected;
     }
 
 /*

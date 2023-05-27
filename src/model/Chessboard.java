@@ -213,7 +213,8 @@ public class Chessboard {
             return false;
         }
 
-        solveTrap(src, dest);
+        //solveTrap(src, dest);
+        //在这里调用这个会导致显示可走位置时遍历整个数组找到trap 导致选中棋子rank变为零
         return calculateDistance(src, dest) == 1;
     }
 
@@ -288,7 +289,7 @@ public class Chessboard {
                 return true;
             }
         }
-        solveTrap(src, dest);
+        //solveTrap(src, dest);
         return calculateDistance(src, dest) == 1 && srcPiece.canCapture(destPiece);
     }
 

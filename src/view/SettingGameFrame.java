@@ -6,8 +6,6 @@ import javax.sound.sampled.*;
 import javax.swing.*;
 import java.awt.*;
 
-import java.io.File;
-import java.util.ArrayList;
 
 
 public class SettingGameFrame extends JFrame{
@@ -103,12 +101,17 @@ public class SettingGameFrame extends JFrame{
         });
     }
     private void AIButton(){
-        JButton button = new JButton("Play with AI");
+        JButton button = new JButton("Change the theme");
         button.setBorder(null);
         button.setSize(200, 40);
         button.setLocation(50,150);
         button.setFont(new Font("Rockwell", Font.BOLD, 20));
         add(button);
+        button.addActionListener((e) -> {
+
+
+
+        });
     }
 
 }

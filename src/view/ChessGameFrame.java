@@ -1,4 +1,6 @@
 package view;
+import controller.AI;
+import controller.AIcontroller;
 import controller.GameController;
 import model.*;
 import view.ChessComponent.*;
@@ -87,8 +89,15 @@ public class ChessGameFrame extends JFrame {
         chessboardComponent = new ChessboardComponent(ONE_CHESS_SIZE);
         chessboardComponent.setLocation(HEIGTH / 5, HEIGTH / 15);
         this.getLayeredPane().add(chessboardComponent, JLayeredPane.MODAL_LAYER);
-        GameController controller = new GameController(chessboardComponent,new Chessboard(),this);
-        chessboardComponent.setGameController(controller);
+        if(AI.mode==false) {
+            GameController controller = new GameController(chessboardComponent, new Chessboard(), this);
+            chessboardComponent.setGameController(controller);
+        }else{
+            AIcontroller controller = new AIcontroller(chessboardComponent,new Chessboard(),this);
+            chessboardComponent.setAIController(controller);
+        }
+
+
     }
     private void addLabel() {
         JLabel statusLabel = new JLabel("-Jungle-");
@@ -130,11 +139,16 @@ public class ChessGameFrame extends JFrame {
         this.getLayeredPane().add(UndoButton, JLayeredPane.MODAL_LAYER);
         UndoButton.addActionListener((e) -> {
             System.out.println("Click Undo");
-            int result=JOptionPane.showConfirmDialog(this, "Are you sure to undo your last step?", "Undo Option",
-                    JOptionPane.YES_NO_OPTION);
-            if(result==0) {
+           // int result=JOptionPane.showConfirmDialog(this, "Are you sure to undo your last step?", "Undo Option",
+                    //JOptionPane.YES_NO_OPTION);
+            //if(result==0) {
+            if(AI.mode == false) {
                 chessboardComponent.getGameController().undo();
+            }else{
+                chessboardComponent.aIcontroller().undo();
+                chessboardComponent.aIcontroller().undo();
             }
+           // }
         });
     }
     private void addSettingButton(){
@@ -251,7 +265,11 @@ public class ChessGameFrame extends JFrame {
                     if (readable == true) {
                         FileReader fileReader_again = new FileReader(file);
                         BufferedReader reader_again = new BufferedReader(fileReader_again);
-                        chessboardComponent.getGameController().load(reader_again);
+                        if(AI.mode == false) {
+                            chessboardComponent.getGameController().load(reader_again);
+                        }else {
+                            chessboardComponent.aIcontroller().load(reader_again);
+                        }
                     }
                 } catch (FileNotFoundException ex) {
                     throw new RuntimeException(ex);
@@ -281,7 +299,12 @@ public class ChessGameFrame extends JFrame {
         this.getLayeredPane().add(button, JLayeredPane.MODAL_LAYER);
         button.addActionListener(e -> {
             System.out.println("Click save");
-            chessboardComponent.getGameController().save();
+            if(AI.mode == false) {
+                chessboardComponent.getGameController().save();
+            }else {
+                chessboardComponent.aIcontroller().save();
+            }
+
         });
     }
     public void setCurrentPlayerLabel() {

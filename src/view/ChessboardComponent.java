@@ -1,4 +1,6 @@
 package view;
+import controller.AI;
+import controller.AIcontroller;
 import controller.GameController;
 import model.*;
 import view.ChessComponent.*;
@@ -12,10 +14,8 @@ import java.util.Set;
 import java.util.List;
 
 import static model.Chessboard.getChessPieceAt;
-import static model.Chessboard.getGridAt;
 import static model.Constant.CHESSBOARD_COL_SIZE;
 import static model.Constant.CHESSBOARD_ROW_SIZE;
-import static view.SwingUtil.createAutoAdjustIcon;
 
 /**
  * This class represents the checkerboard component object on the panel
@@ -38,6 +38,7 @@ public class ChessboardComponent extends JComponent {
      * @since 1.4
      */
     public GameController gameController;
+    public AIcontroller aIcontroller;
 
     public ChessboardComponent(int chessSize) {
         CHESS_SIZE = chessSize;
@@ -145,6 +146,9 @@ public class ChessboardComponent extends JComponent {
     public void registerController(GameController gameController) {
         this.gameController = gameController;
     }
+    public void registerController(AIcontroller controller) {
+        this.aIcontroller = controller;
+    }
 
     public void setChessComponentAtGrid(ChessboardPoint point, AnimalChessComponent chess) {
         getGridComponentAt(point).add(chess);
@@ -193,16 +197,24 @@ public class ChessboardComponent extends JComponent {
     @Override
     protected void processMouseEvent(MouseEvent e) {
         if (e.getID() == MouseEvent.MOUSE_PRESSED) {
+            //getAnimalChessComponent(getChessboardPoint(e.getPoint())).setSelected(true);
             JComponent clickedComponent = (JComponent) getComponentAt(e.getX(), e.getY());
-            if (clickedComponent.getComponentCount() == 0) {
-                System.out.print("None chess here and ");
-                gameController.onPlayerClickCell(getChessboardPoint(e.getPoint()), (CellComponent) clickedComponent);
-            } else {
-                if(getChessPieceAt(getChessboardPoint(e.getPoint())).getOwner()==gameController.getCurrentPlayer()) {
-                    gameController.viewValidMoves(getChessboardPoint(e.getPoint()));
+            if (AI.mode == false){
+                if (clickedComponent.getComponentCount() == 0) {
+                    System.out.print("None chess here and ");
+                    gameController.onPlayerClickCell(getChessboardPoint(e.getPoint()), (CellComponent) clickedComponent);
+                } else {
+                    System.out.print("One chess here and ");
+                    gameController.onPlayerClickChessPiece(getChessboardPoint(e.getPoint()), (AnimalChessComponent) clickedComponent.getComponents()[0]);
                 }
-                System.out.print("One chess here and ");
-                gameController.onPlayerClickChessPiece(getChessboardPoint(e.getPoint()), (AnimalChessComponent) clickedComponent.getComponents()[0]);
+        } else{
+                if (clickedComponent.getComponentCount() == 0) {
+                    System.out.print("None chess here and ");
+                    aIcontroller.onPlayerClickCell(getChessboardPoint(e.getPoint()), (CellComponent) clickedComponent);
+                } else {
+                    System.out.print("One chess here and ");
+                    aIcontroller.onPlayerClickChessPiece(getChessboardPoint(e.getPoint()), (AnimalChessComponent) clickedComponent.getComponents()[0]);
+                }
             }
         }
     }
@@ -210,7 +222,6 @@ public class ChessboardComponent extends JComponent {
 
     public void showValidMoves(List<ChessboardPoint> validMoves) {
         for (ChessboardPoint validMove : validMoves) {
-
             Graphics2D g2d = (Graphics2D) getGridComponentAt(validMove).getGraphics();
             g2d.setColor(Color.WHITE);
             g2d.setStroke(new BasicStroke(5.0f));
@@ -235,8 +246,6 @@ public class ChessboardComponent extends JComponent {
     }
 
  */
-
-
     public void hideValidMoves(List<ChessboardPoint> validMoves) throws ConcurrentModificationException {
         //多线程并发修改异常
         try {
@@ -256,8 +265,12 @@ public class ChessboardComponent extends JComponent {
     public void setGameController(GameController gameController) {
         this.gameController = gameController;
     }
+    public void setAIController(AIcontroller aIController) {
+        this.aIcontroller = aIController;
+    }
     public GameController getGameController(){
         return gameController;
     }
 
+    public AIcontroller aIcontroller() {return aIcontroller;}
 }
