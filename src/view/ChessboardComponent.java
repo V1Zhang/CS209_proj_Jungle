@@ -1,6 +1,7 @@
 package view;
 import controller.AI;
 import controller.AIcontroller;
+import controller.AlphaBetaController;
 import controller.GameController;
 import model.*;
 import view.ChessComponent.*;
@@ -39,7 +40,7 @@ public class ChessboardComponent extends JComponent {
      */
     public GameController gameController;
     public AIcontroller aIcontroller;
-
+    public AlphaBetaController abcontroller;
     public ChessboardComponent(int chessSize) {
         CHESS_SIZE = chessSize;
         int width = CHESS_SIZE * 7;
@@ -149,6 +150,9 @@ public class ChessboardComponent extends JComponent {
     public void registerController(AIcontroller controller) {
         this.aIcontroller = controller;
     }
+    public void registerController(AlphaBetaController controller) {
+        this.abcontroller = controller;
+    }
 
     public void setChessComponentAtGrid(ChessboardPoint point, AnimalChessComponent chess) {
         getGridComponentAt(point).add(chess);
@@ -199,7 +203,7 @@ public class ChessboardComponent extends JComponent {
         if (e.getID() == MouseEvent.MOUSE_PRESSED) {
             //getAnimalChessComponent(getChessboardPoint(e.getPoint())).setSelected(true);
             JComponent clickedComponent = (JComponent) getComponentAt(e.getX(), e.getY());
-            if (AI.mode == false){
+            if (AI.mode == false) {
                 if (clickedComponent.getComponentCount() == 0) {
                     System.out.print("None chess here and ");
                     gameController.onPlayerClickCell(getChessboardPoint(e.getPoint()), (CellComponent) clickedComponent);
@@ -207,13 +211,23 @@ public class ChessboardComponent extends JComponent {
                     System.out.print("One chess here and ");
                     gameController.onPlayerClickChessPiece(getChessboardPoint(e.getPoint()), (AnimalChessComponent) clickedComponent.getComponents()[0]);
                 }
-        } else{
-                if (clickedComponent.getComponentCount() == 0) {
-                    System.out.print("None chess here and ");
-                    aIcontroller.onPlayerClickCell(getChessboardPoint(e.getPoint()), (CellComponent) clickedComponent);
-                } else {
-                    System.out.print("One chess here and ");
-                    aIcontroller.onPlayerClickChessPiece(getChessboardPoint(e.getPoint()), (AnimalChessComponent) clickedComponent.getComponents()[0]);
+            } else {
+                if (AI.difficulty == 1) {
+                    if (clickedComponent.getComponentCount() == 0) {
+                        System.out.print("None chess here and ");
+                        aIcontroller.onPlayerClickCell(getChessboardPoint(e.getPoint()), (CellComponent) clickedComponent);
+                    } else {
+                        System.out.print("One chess here and ");
+                        aIcontroller.onPlayerClickChessPiece(getChessboardPoint(e.getPoint()), (AnimalChessComponent) clickedComponent.getComponents()[0]);
+                    }
+                } else if (AI.difficulty == 2) {
+                    if (clickedComponent.getComponentCount() == 0) {
+                        System.out.print("None chess here and ");
+                        abcontroller.onPlayerClickCell(getChessboardPoint(e.getPoint()), (CellComponent) clickedComponent);
+                    } else {
+                        System.out.print("One chess here and ");
+                        abcontroller.onPlayerClickChessPiece(getChessboardPoint(e.getPoint()), (AnimalChessComponent) clickedComponent.getComponents()[0]);
+                    }
                 }
             }
         }
@@ -268,9 +282,14 @@ public class ChessboardComponent extends JComponent {
     public void setAIController(AIcontroller aIController) {
         this.aIcontroller = aIController;
     }
+    public void setAlphaBetaController(AlphaBetaController abController) {
+        this.abcontroller = abController;
+    }
     public GameController getGameController(){
         return gameController;
     }
 
     public AIcontroller aIcontroller() {return aIcontroller;}
+
+    public AlphaBetaController abcontroller() {return abcontroller;}
 }

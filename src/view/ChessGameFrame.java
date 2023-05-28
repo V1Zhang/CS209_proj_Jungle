@@ -1,9 +1,9 @@
 package view;
 import controller.AI;
 import controller.AIcontroller;
+import controller.AlphaBetaController;
 import controller.GameController;
 import model.*;
-import view.ChessComponent.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -65,6 +65,7 @@ public class ChessGameFrame extends JFrame {
         setRoundsNumLabel();
        }
 
+
     private void addBG() {
         //ImageIcon img = new ImageIcon("src/images/bg1.jpg");
         ImageIcon img = createAutoAdjustIcon("src/images/bg1.jpg", true);
@@ -93,8 +94,13 @@ public class ChessGameFrame extends JFrame {
             GameController controller = new GameController(chessboardComponent, new Chessboard(), this);
             chessboardComponent.setGameController(controller);
         }else{
-            AIcontroller controller = new AIcontroller(chessboardComponent,new Chessboard(),this);
-            chessboardComponent.setAIController(controller);
+            if(AI.difficulty == 1) {
+                AIcontroller controller = new AIcontroller(chessboardComponent, new Chessboard(), this);
+                chessboardComponent.setAIController(controller);
+            } else if (AI.difficulty == 2) {
+                AlphaBetaController controller = new AlphaBetaController(chessboardComponent, new Chessboard(), this);
+                chessboardComponent.setAlphaBetaController(controller);
+            }
         }
 
 
@@ -145,8 +151,13 @@ public class ChessGameFrame extends JFrame {
             if(AI.mode == false) {
                 chessboardComponent.getGameController().undo();
             }else{
-                chessboardComponent.aIcontroller().undo();
-                chessboardComponent.aIcontroller().undo();
+                if(AI.difficulty==1) {
+                    chessboardComponent.aIcontroller().undo();
+                    chessboardComponent.aIcontroller().undo();
+                } else if (AI.difficulty==2) {
+                    chessboardComponent.abcontroller().undo();
+                    chessboardComponent.abcontroller().undo();
+                }
             }
            // }
         });
@@ -160,7 +171,7 @@ public class ChessGameFrame extends JFrame {
         this.getLayeredPane().add(button, JLayeredPane.MODAL_LAYER);
         button.addActionListener((e) -> {
             System.out.println("Click setting");
-            SettingGameFrame settingGameFrame = new SettingGameFrame(300,600,this, musicPlayer);
+            SettingGameFrame settingGameFrame = new SettingGameFrame(300,400,this, musicPlayer);
             settingGameFrame.setVisible(true);
         });
     }
@@ -268,7 +279,11 @@ public class ChessGameFrame extends JFrame {
                         if(AI.mode == false) {
                             chessboardComponent.getGameController().load(reader_again);
                         }else {
-                            chessboardComponent.aIcontroller().load(reader_again);
+                            if(AI.difficulty==1) {
+                                chessboardComponent.aIcontroller().load(reader_again);
+                            } else if (AI.difficulty==2) {
+                                chessboardComponent.abcontroller().load(reader_again);
+                            }
                         }
                     }
                 } catch (FileNotFoundException ex) {
@@ -302,7 +317,12 @@ public class ChessGameFrame extends JFrame {
             if(AI.mode == false) {
                 chessboardComponent.getGameController().save();
             }else {
-                chessboardComponent.aIcontroller().save();
+                if(AI.difficulty==1) {
+                    chessboardComponent.aIcontroller().save();
+                } else if (AI.difficulty==2) {
+                    chessboardComponent.abcontroller().save();
+                }
+
             }
 
         });

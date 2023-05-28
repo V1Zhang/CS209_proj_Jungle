@@ -1,66 +1,277 @@
 package controller;
-import listener.GameListener;
 
+import listener.GameListener;
 import model.*;
-import view.*;
+import view.CellComponent;
 import view.ChessComponent.*;
+import view.ChessGameFrame;
+import view.ChessboardComponent;
+import view.GridType;
 
 import javax.swing.*;
-import java.io.*;
-import java.nio.Buffer;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 
-import static model.Chessboard.*;
+import static model.Chessboard.getChessPieceAt;
+import static model.Chessboard.setChessPiece;
 import static model.Constant.CHESSBOARD_COL_SIZE;
 import static model.Constant.CHESSBOARD_ROW_SIZE;
-public class AIcontroller implements GameListener {
-        private ChessGameFrame frame;
-        private Chessboard model;
-        private ChessboardComponent view;
-        private PlayerColor currentPlayer = PlayerColor.BLUE;
-        // Record whether there is a selected piece before
-        private ChessboardPoint selectedPoint;
-        private int turnCount = 1;
-        private PlayerColor winner;
-        private List<ChessboardPoint> validMoves = new ArrayList<>();
-        private Stack<ChessboardPoint> stack_point_before;// record every previous step's chessboardPoint
-        private Stack<ChessboardPoint> stack_point_after;// record every next step's chessboardPoint
-        private Stack<ChessPiece> eat;// record every previous step's chessboardPiece
-        private Stack<ChessPiece> eaten;// record every next step's chessboardPoint
-        private Stack<AnimalChessComponent> eaten_animal;// record every eaten animal
-        private Stack<AnimalChessComponent> eat_animal;// record every eat animal
-        ChessboardPoint chessPoint_before = null;
-        ChessboardPoint chessPoint_after = null;
-        private List<Step> stepList = new ArrayList<>();
-        private List<String> stepList_str = new ArrayList<>();
-        private Step step = new Step(null, null, null, null, currentPlayer, turnCount);
 
-        public AIcontroller(ChessboardComponent view, Chessboard model, ChessGameFrame frame) {
-            this.view = view;
-            this.model = model;
-            this.frame = frame;
-            view.registerController(this);
-            view.initiateChessComponent(model);
-            view.repaint();
-            this.stack_point_before = new Stack<ChessboardPoint>();
-            this.stack_point_after = new Stack<ChessboardPoint>();
-            this.eaten = new Stack<>();
-            this.eat = new Stack<>();
-            this.eat_animal = new Stack<>();
-            this.eaten_animal = new Stack<>();
+public class AlphaBetaController implements GameListener {
+    private ChessGameFrame frame;
+    private static Chessboard model;
+    private ChessboardComponent view;
+    private PlayerColor currentPlayer = PlayerColor.BLUE;
+    // Record whether there is a selected piece before
+    private ChessboardPoint selectedPoint;
+    private int turnCount = 1;
+    private PlayerColor winner;
+    private List<ChessboardPoint> validMoves = new ArrayList<>();
+    private Stack<ChessboardPoint> stack_point_before;// record every previous step's chessboardPoint
+    private Stack<ChessboardPoint> stack_point_after;// record every next step's chessboardPoint
+    private Stack<ChessPiece> eat;// record every previous step's chessboardPiece
+    private Stack<ChessPiece> eaten;// record every next step's chessboardPoint
+    private Stack<AnimalChessComponent> eaten_animal;// record every eaten animal
+    private Stack<AnimalChessComponent> eat_animal;// record every eat animal
+    ChessboardPoint chessPoint_before = null;
+    ChessboardPoint chessPoint_after = null;
+    private List<Step> stepList = new ArrayList<>();
+    private List<String> stepList_str = new ArrayList<>();
+    private Step step = new Step(null, null, null, null, currentPlayer, turnCount);
+    int size = 0;
+    ArrayList<Integer> scores = new ArrayList<>();
+
+    int min_max_index = 0;
+
+    public AlphaBetaController(ChessboardComponent view, Chessboard model, ChessGameFrame frame) {
+        this.view = view;
+        this.model = model;
+        this.frame = frame;
+        view.registerController(this);
+        view.initiateChessComponent(model);
+        view.repaint();
+        this.stack_point_before = new Stack<ChessboardPoint>();
+        this.stack_point_after = new Stack<ChessboardPoint>();
+        this.eaten = new Stack<>();
+        this.eat = new Stack<>();
+        this.eat_animal = new Stack<>();
+        this.eaten_animal = new Stack<>();
+    }
+
+    public void ABPlay() {
+        int[][] max = new int[9][7];
+        int m=0;
+        ChessboardPoint choosen_point = null;
+        ChessboardPoint dest = null;
+        // 遍历当前玩家所有棋子的位置
+        for (int i = 0; i < 9; i++) {
+            for (int j = 0; j < 7; j++) {
+                choosen_point = ChessboardPoint.getChessboardPoint(i, j);
+                if (getChessPieceAt(choosen_point) != null && getChessPieceAt(choosen_point).getOwner() == currentPlayer) {// 判断是否为当前玩家的棋子
+                    size = model.getValidMovesList(choosen_point).size();
+                    for (int a = 0; a < size; a++) {
+                        dest = model.getValidMovesList(choosen_point).get(a);
+                        int score = calculatePieceValue(choosen_point.getRow(),choosen_point.getRow(),getChessPieceAt(choosen_point).getName(), dest.getRow(), dest.getCol(), getChessPieceAt(dest));
+                        scores.add(score);
+                    }
+
+                    //对一个棋子遍历出它的最小得分
+                    if (scores.size() == 0) {
+                        max[i][j] = -1;
+                    } else {
+                        int min = scores.get(0);
+                        int in_max = scores.get(0);
+                        while (m < scores.size()) {
+                            if (scores.get(m) < min) {
+                                min = scores.get(m);
+                            }
+                            if(scores.get(m) > in_max){
+                                in_max = scores.get(m);
+                                min_max_index = m;
+                            }
+                            m++;
+                            max[i][j] = min;
+                        }
+                    }
+                }
+                scores.clear();
+            }
+        }
+        //遍历所有棋子的最小得分，取出其中最大值 对应的行棋即为最优解
+        int Max = max[0][0];
+        int p = 0;
+        int q = 0;
+        for (int i = 0; i < 9; i++) {
+            for (int j = 0; j < 7; j++) {
+                if(max[i][j]>Max){
+                    Max=max[i][j];
+                    p=i;
+                    q=j;
+                }
+            }
+        }
+        ChessboardPoint final_choosen = ChessboardPoint.getChessboardPoint(p,q);
+        ChessboardPoint final_dest = model.getValidMovesList(final_choosen).get(min_max_index);
+
+
+        if(getChessPieceAt(final_dest) == null) {
+            stack_point_before.push(final_choosen);
+            stack_point_after.push(final_dest);
+            ChessPiece temp_eat = model.getChessPieceAt(stack_point_before.peek());
+            ChessPiece temp_eaten = model.getChessPieceAt(stack_point_after.peek()); //push进去null
+            eat.push(temp_eat);
+            eaten.push(temp_eaten);
+
+            stepList.add(model.recordStep(final_choosen, final_dest, currentPlayer, turnCount));
+            step = new Step(final_choosen, final_dest, getChessPieceAt(final_choosen), null, currentPlayer, turnCount);
+            stepList_str.add(step.toString());
+
+            model.solveTrap(final_choosen, final_dest);
+            model.moveChessPiece(final_choosen, final_dest);
+            view.setChessComponentAtGrid(final_dest, view.removeChessComponentAtGrid(final_choosen));
+        }
+        else{
+            stack_point_before.push(final_choosen);
+            stack_point_after.push(final_dest);
+
+            AnimalChessComponent temp_animal_eat = view.getAnimalChessComponent(stack_point_before.peek());
+            AnimalChessComponent temp_animal_eaten = view.getAnimalChessComponent(stack_point_after.peek());
+            eat_animal.push(temp_animal_eat);
+            eaten_animal.push(temp_animal_eaten);
+            ChessPiece temp_eat = model.getChessPieceAt(stack_point_before.peek());
+            ChessPiece temp_eaten = model.getChessPieceAt(stack_point_after.peek());
+            eat.push(temp_eat);
+            eaten.push(temp_eaten);
+
+            stepList.add(model.recordStep(final_choosen, final_dest, currentPlayer, turnCount));
+            step = new Step(selectedPoint, final_dest, model.getChessPieceAt(stack_point_before.peek()), model.getChessPieceAt(stack_point_after.peek()), currentPlayer, turnCount);
+            stepList_str.add(step.toString());
+
+            hideValidMoves();
+
+            model.captureChessPiece(final_choosen, final_dest);
+            view.removeChessComponentAtGrid(final_dest);
+            view.setChessComponentAtGrid(final_dest, view.removeChessComponentAtGrid(final_choosen));
+        }
+        view.repaint();
+
+        checkWin();
+        turnCount++;
+        frame.getRoundNumLabel().setText(String.format("Round Number: %d", turnCount));
+        swapColor();
+        final_choosen = null;
+    }
+
+
+    private static int calculatePieceValue(int C_row, int C_col, String name1,int D_row,int D_col,ChessPiece dest_piece) {
+//        分值总和：如果棋子具有较高的分值，则评估函数返回较高的分数，反之则返回较低的分数。
+//        棋子位置权值：如果己方的棋子位于对手陷阱周围的位置，则该棋子的价值更高。根据斗兽棋棋盘的布局，可以为每个位置分配不同的权值。
+//        棋子控制范围：如果己方控制了更多的地形，则当前局面评分高；反之则评分较低。
+//        左右河岸：如果某只老虎或狮子跨越河流，则在另一岸被吃掉的可能性就大大增加了，因此处在河岸上的老虎和狮子相应地会得到更高的权重。
+//        棋子基本状态：游戏进程、濒死棋子等因素。
+        int value = 0;
+        //选中棋子等级权重 优先走等级高的棋子
+        switch (name1) {
+            case "Elephant":   // 象
+                value += 16;
+                break;
+            case "Lion":   // 狮
+                value += 14;
+                if ((C_col == 2 || C_col == 4) && (C_row == 6 || C_row == 2)) {
+                    value += 5;  // 处在河边上，增加价值权重
+                }
+                break;
+            case "Tiger":   // 虎
+                value = 12;
+                if (C_col == 3 || C_col == 4) {
+                    value += 5;   // 处在河边上，增加价值权重
+                }
+                break;
+            case "Leopard":   // 豹
+                value += 10;
+                break;
+            case "Wolf":   // 狼
+                value += 8;
+                break;
+            case "Dog":   // 狗
+                value += 6;
+                break;
+            case "Cat":   // 猫
+                value += 4;
+                break;
+            case "Rat":   // 鼠
+                value += 2;
+
+                Cell[][] grid = model.getGrid();
+                //鼠进入河，增加价值权重
+                if (grid[D_row][D_col].getType() == GridType.RIVER) {
+                    value += 10;
+                    break;
+                }
         }
 
+                // 棋子位置权重
+        switch (C_row) {
+            case 0:
+                value += 16;
+                break;
+            case 1:
+                value += 14;
+                break;
+            case 2:
+                value += 12;
+                break;
+            case 3:
+                value += 10;
+                break;
+            case 4:
+                value += 8;
+                break;
+            case 5:
+                value += 6;
+                break;
+            case 6:
+                value += 4;
+            case 7:
+                value += 2;
+                break;
+            case 8:
+                value += 0;
+                break;
+        }
+                    //目标位置越靠下权重更高
+                if(D_row < C_row){
+                    value+=30;
+                }
+                    //目标位置为兽穴，权重拉满
+                if(D_row == 0 && D_col == 3){
+                    value += 100;
+                }
+                    // 目标位置为对面的三个陷阱之一，增加价值权重
+                if ((D_row == 0 && D_col == 2) || (D_row == 0 && D_col == 4) || (D_row == 1 && D_col == 3)) {
+                    value += 50;
+                }
+                    //可以吃子，优先吃子
+                if(dest_piece != null){
+                    value += 80;
+                }
+
+        return value;
+    }
 
 
 
-    // after a valid move swap the player
+
+
+
+
         private void swapColor() {
             currentPlayer = currentPlayer == PlayerColor.BLUE ? PlayerColor.RED : PlayerColor.BLUE;
             frame.getCurrentPlayerLabel().setText(String.format("%s's Turn", currentPlayer.toString()));
         }
-
         private void checkWin() {//吃光对方所有棋子或进入对方兽穴-取胜
             if (model.checkOpponentNone(currentPlayer)) {
                 winner = currentPlayer;
@@ -76,16 +287,12 @@ public class AIcontroller implements GameListener {
                 JOptionPane.showMessageDialog(null, "The winner is:BLUE", "Winner:", 1);
             }
         }
-
         public void viewValidMoves(ChessboardPoint point) {
             for (int i = 0; i < model.getValidMovesList(point).size(); i++) {
                 validMoves.add(model.getValidMovesList(point).get(i));
             }
             view.showValidMoves(validMoves);
         }
-
-
-
         public void hideValidMoves() {
             view.hideValidMoves(validMoves);
         }
@@ -93,73 +300,6 @@ public class AIcontroller implements GameListener {
         // 获取指定位置棋子的所有可移动位置，将结果保存在成员变量 validMoves 中。
         // 接下来，它调用视图层的 showValidMoves(validMoves) 方法，将可移动位置传递给视图层，
         // 让视图层根据这些位置来更新棋盘的显示。
-
-        public void AIplay(){
-            //AI只能后手
-            int x,y;
-            Random random1 = new Random();
-            Random random2= new Random();
-            ChessboardPoint choosen_point = null;
-            while (true) {
-                x = random1.nextInt(9);
-                y = random2.nextInt(7);
-                choosen_point = ChessboardPoint.getChessboardPoint(x,y);
-                if(getChessPieceAt(choosen_point) != null && getChessPieceAt(choosen_point).getOwner() == currentPlayer){
-                    break;
-                }
-            }
-            Random random3 = new Random();
-            int size = model.getValidMovesList(choosen_point).size();
-            int z = random3.nextInt(size);
-            ChessboardPoint dest = model.getValidMovesList(choosen_point).get(z);
-
-            if(getChessPieceAt(dest) == null) {
-                stack_point_before.push(choosen_point);
-                stack_point_after.push(dest);
-                ChessPiece temp_eat = model.getChessPieceAt(stack_point_before.peek());
-                ChessPiece temp_eaten = model.getChessPieceAt(stack_point_after.peek()); //push进去null
-                eat.push(temp_eat);
-                eaten.push(temp_eaten);
-
-                stepList.add(model.recordStep(choosen_point, dest, currentPlayer, turnCount));
-                step = new Step(choosen_point, dest, getChessPieceAt(choosen_point), null, currentPlayer, turnCount);
-                stepList_str.add(step.toString());
-
-                model.solveTrap(choosen_point, dest);
-                model.moveChessPiece(choosen_point, dest);
-                view.setChessComponentAtGrid(dest, view.removeChessComponentAtGrid(choosen_point));
-            }
-            else{
-                stack_point_before.push(choosen_point);
-                stack_point_after.push(dest);
-
-                AnimalChessComponent temp_animal_eat = view.getAnimalChessComponent(stack_point_before.peek());
-                AnimalChessComponent temp_animal_eaten = view.getAnimalChessComponent(stack_point_after.peek());
-                eat_animal.push(temp_animal_eat);
-                eaten_animal.push(temp_animal_eaten);
-                ChessPiece temp_eat = model.getChessPieceAt(stack_point_before.peek());
-                ChessPiece temp_eaten = model.getChessPieceAt(stack_point_after.peek());
-                eat.push(temp_eat);
-                eaten.push(temp_eaten);
-
-                stepList.add(model.recordStep(choosen_point, dest, currentPlayer, turnCount));
-                step = new Step(selectedPoint, dest, model.getChessPieceAt(stack_point_before.peek()), model.getChessPieceAt(stack_point_after.peek()), currentPlayer, turnCount);
-                stepList_str.add(step.toString());
-
-                hideValidMoves();
-
-                model.captureChessPiece(choosen_point, dest);
-                view.removeChessComponentAtGrid(dest);
-                view.setChessComponentAtGrid(dest, view.removeChessComponentAtGrid(choosen_point));
-            }
-            view.repaint();
-
-            checkWin();
-            turnCount++;
-            frame.getRoundNumLabel().setText(String.format("Round Number: %d", turnCount));
-            swapColor();
-            choosen_point = null;
-        }
 
         // click an empty cell
         @Override
@@ -198,7 +338,7 @@ public class AIcontroller implements GameListener {
                 Thread t = new Thread(() -> {
                     try{
                         Thread.sleep(500); //milliseconds
-                        AIplay();
+                        ABPlay();
                     }catch (InterruptedException e){
                         e.printStackTrace();
                     }
@@ -268,7 +408,7 @@ public class AIcontroller implements GameListener {
                     Thread t = new Thread(() -> {
                         try {
                             Thread.sleep(500); //milliseconds
-                            AIplay();
+                            ABPlay();
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
@@ -542,34 +682,12 @@ public class AIcontroller implements GameListener {
                     }
                 }
                 line++;
-
-
-                //view.initiateChessComponent(model_new);
-
-
-                //chessboardComponent.setChessComponentAtGrid(ChessboardPoint point, AnimalChessComponent chess)
-                //chessboardComponent.gridComponents[line][s].add(new ElephantChessComponent(PlayerColor.BLUE, ONE_CHESS_SIZE));
-                //grid[row][col].setPiece(new ChessPiece(PlayerColor.BLUE, "Elephant",8));
-
-        /*for (Step step : stepList) {
-            //model.runStep(step);
-            //view.runStep(step);
-            view.repaint();
-            try {
-                Thread.sleep(259);
-                view.paintImmediately(0, 0, view.getWidth(), view.getHeight());
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-
-         */
             }
             view.repaint();
-
-            //Desktop.getDesktop().open(file);
-
         }
     }
+
+
 
 
 

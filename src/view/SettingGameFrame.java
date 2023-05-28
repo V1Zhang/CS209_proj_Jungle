@@ -15,8 +15,8 @@ public class SettingGameFrame extends JFrame{
     //类比 ChessGameFrame中getGameController的方法：先声明要能get上一个类的实例
     SwingWorker<Void,Void> worker;
     ArrayList<SwingWorker<Void,Void> > workers;
-
      */
+
     private MusicPlayer musicPlayer;
     public SettingGameFrame(int width,int height,JFrame mainFrame, MusicPlayer musicPlayer){
         setTitle("Setting");
@@ -35,7 +35,7 @@ public class SettingGameFrame extends JFrame{
        addMusicLable();
         MusicButtonOn();
         MusicButtonOff();
-        AIButton();
+        BackButton();
     }
     //声音音量调整  棋子风格
     private void addTitleLable(){
@@ -100,17 +100,19 @@ public class SettingGameFrame extends JFrame{
             musicPlayer.musicPlay(musicPlayer.getFlag());
         });
     }
-    private void AIButton(){
-        JButton button = new JButton("Change the theme");
+    private void BackButton(){
+        JButton button = new JButton("Back to List");
         button.setBorder(null);
         button.setSize(200, 40);
         button.setLocation(50,150);
         button.setFont(new Font("Rockwell", Font.BOLD, 20));
         add(button);
         button.addActionListener((e) -> {
-
-
-
+            this.setVisible(false);
+            ChessGameFrame mainFrame = new ChessGameFrame(1100, 810, musicPlayer);
+            mainFrame.setVisible(false);
+            ChooseFrame chooseFrame = new ChooseFrame(280,200);
+            chooseFrame.setVisible(true);
         });
     }
 

@@ -9,13 +9,13 @@ import java.awt.*;
 import java.io.*;
 import javax.swing.*;
 import static view.SwingUtil.createAutoAdjustIcon;
-public class ChooseFrame extends JFrame{
+public class DifficultyFrame extends JFrame{
     private final int w;
     private final int h;
     JLayeredPane layeredPane = new JLayeredPane();
 
-    public ChooseFrame (int width, int height) {
-        setTitle("Choose The Mode"); //设置标题
+    public DifficultyFrame (int width, int height) {
+        setTitle("Choose The Difficulty"); //设置标题
         this.w = width;
         this.h = height;
 
@@ -25,32 +25,33 @@ public class ChooseFrame extends JFrame{
         setLayout(null);
 
         add(layeredPane);
-        addButtonAI();
-        addButtonTwo();
+        addButtonEasy();
+        addButtonDifficult();
     }
-    private void addButtonAI(){
-        ImageIcon img = createAutoAdjustIcon("src/images/button1.jpg", true);
+    private void addButtonEasy(){
+        ImageIcon img = createAutoAdjustIcon("src/images/Easy.jpg", true);
         JButton button = new JButton(img);
         button.setLocation(0, 0);
         button.setSize(280, 85);
         this.getLayeredPane().add(button, JLayeredPane.MODAL_LAYER);
         button.addActionListener((e) -> {
-            System.out.println("AI Mode!");
-            AI.startAIMode();
-            DifficultyFrame difficultyFrame = new DifficultyFrame(250,200);
-            difficultyFrame.setVisible(true);
+            System.out.println("Easy Mode!");
+            AI.random();
+            MusicPlayer musicPlayer = new MusicPlayer();
+            ChessGameFrame mainFrame = new ChessGameFrame(1100, 810, musicPlayer);
+            mainFrame.setVisible(true);
             this.setVisible(false);
         });
     }
-    private void addButtonTwo(){
-        ImageIcon img = createAutoAdjustIcon("src/images/button2.jpg", true);
+    private void addButtonDifficult(){
+        ImageIcon img = createAutoAdjustIcon("src/images/Difficult.jpg", true);
         JButton button = new JButton(img);
         button.setLocation(0, 87);
         button.setSize(280, 95);
         this.getLayeredPane().add(button, JLayeredPane.MODAL_LAYER);
         button.addActionListener((e) -> {
-            System.out.println("Two Players");
-            AI.quitAIMode();
+            System.out.println("Difficult Mode");
+            AI.strategy();
             MusicPlayer musicPlayer = new MusicPlayer();
             ChessGameFrame mainFrame = new ChessGameFrame(1100, 810, musicPlayer);
             mainFrame.setVisible(true);
