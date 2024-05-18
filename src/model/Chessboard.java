@@ -152,7 +152,7 @@ public class Chessboard {
             }
         }
         //狮子和老虎可以跳过河
-        if (calculateDistance(src,dest)>1&&(Objects.equals(getChessPieceAt(src).getName(), "Lion"))||(Objects.equals(getChessPieceAt(src).getName(), "Tiger"))) {
+        if (calculateDistance(src,dest)>1&&(Objects.equals(getChessPieceAt(src).getName(), "Lion"))||calculateDistance(src,dest)>1&&(Objects.equals(getChessPieceAt(src).getName(), "Tiger"))) {
             //不能窜行跳跃
             if (src.getRow() != dest.getRow() && src.getCol() != dest.getCol()) {
                 return false;
@@ -228,16 +228,18 @@ public class Chessboard {
         //不能自己吃自己
         if (srcPiece.getOwner() == destPiece.getOwner()) {
             return false;
+        }else if(calculateDistance(src, dest) ==1&&srcPiece.getName().equals("Rat")&&destPiece.getName().equals("Rat")&&getGridAt(dest).getType()== RIVER&&getGridAt(src).getType()== RIVER){
+            return true;
         }
         //河里不能吃，也不能在河里被吃
-        if (getGridAt(dest).getType() == GridType.RIVER) {
+        if (getGridAt(dest).getType() == GridType.RIVER&&getGridAt(src).getType()==GridType.LAND) {
             return false;
         }
-        if (getGridAt(src).getType() == GridType.RIVER) {
+        if (getGridAt(src).getType() == GridType.RIVER&&getGridAt(dest).getType()==GridType.LAND) {
             return false;
         }
         // 狮子和虎可以跳过河来捕获
-        if (calculateDistance(src, dest) > 1 && (Objects.equals(srcPiece.getName(), "Lion") || Objects.equals(srcPiece.getName(), "Tiger"))) {
+        if (calculateDistance(src, dest) > 1 && (Objects.equals(srcPiece.getName(), "Lion") || calculateDistance(src, dest) > 1 &&Objects.equals(srcPiece.getName(), "Tiger"))) {
             // 检查两个格子是否在同一行或者同一列
             if (src.getRow() != dest.getRow() && src.getCol() != dest.getCol()) {
                 return false;
@@ -456,10 +458,4 @@ public boolean checkOpponentNone(PlayerColor currentPlayer) {
         Step step=new Step(fromPoint, toPoint, fromPiece, toPiece, currentPlayer, turn);
         return step;
     }
-
-
-
-
-
-
 }

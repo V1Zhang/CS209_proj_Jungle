@@ -235,7 +235,8 @@ public class ChessGameFrame extends JFrame {
                         String[] strings = content.split(",");
                         //根据不同的行数处理不同的异常
                         if (line == 0) {
-                            if (content.equals("B") && content.equals("R")) { //未提供下一步行棋方 错误编码104
+                            if (content.equals("B") || content.equals("R")) {
+                            }else{//未提供下一步行棋方 错误编码104
                                 JOptionPane.showMessageDialog(this, "Error 104: No Current Player Message", "Error", 1);
                                 readable = false;
                                 break;
@@ -248,7 +249,7 @@ public class ChessGameFrame extends JFrame {
                                 break;
                             }
                         }
-                        if (line == 12) {
+                        if (line == 11) {
                             if (strings.length == 7) { //行数不为9 错误编码102
                                 JOptionPane.showMessageDialog(this, "Error 102: Not 9*7 Chessboard-ROW", "Error", 1);
                                 readable = false;
@@ -258,18 +259,21 @@ public class ChessGameFrame extends JFrame {
                         if(line >= 2 && line < 11) {
                             String[] component_str = content.split(",");
                             for (String str : component_str) {
+                                chessError=false;
                                 String[] standardstr = {"R1", "R2", "R3", "R4", "R5", "R5", "R6", "R7", "R8", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "0"};
                                     for(int j=0;j < standardstr.length;j++) {
                                         if (str.equals(standardstr[j])) {
                                             chessError=true;
+                                            break;
                                         }
                                     }
+                                if (chessError==false) { //棋子错误 错误编码103
+                                    JOptionPane.showMessageDialog(this, "Error 103: Wrong Chess Component", "Error", 1);
+                                    readable = false;
+                                    break;
+                                }
                             }
-                            if (chessError==false) { //棋子错误 错误编码101
-                                JOptionPane.showMessageDialog(this, "Error 101: Wrong Chess Component", "Error", 1);
-                                readable = false;
-                                break;
-                            }
+
                         }
                         line++;
                     }
